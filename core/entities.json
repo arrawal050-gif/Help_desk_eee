@@ -1,0 +1,79 @@
+{
+  "faculty": [
+    {"id":"fac_lalit","name":"Prof. Lalit Bhawnrela","aliases":["lalit sir","lalit bhawnrela","prof lalit","cabin 204","plc incharge","automation head"],"floor":1,"pano_id":"17_Mitsubishi_Lab","spoken_hinglish":"Prof. Lalit Bhawnrela ka cabin First Floor par Mitsubishi Lab me hai. Route load ho raha hai."},
+    {"id":"fac_naresh","name":"Dr. Naresh Purohit","aliases":["naresh sir","dr naresh","naresh purohit","robotics hod","vlsi head","cabin 302"],"floor":2,"pano_id":"15_Robotics_Lab","spoken_hinglish":"Dr. Naresh Purohit ka office Second Floor par Robotics aur e-Yantra Lab ke andar hai."},
+    {"id":"fac_shweta","name":"Prof. Shweta Deshmukh","aliases":["shweta maam","prof shweta","shweta deshmukh","lab 1 incharge"],"floor":0,"pano_id":"02_lab1","spoken_hinglish":"Prof. Shweta Deshmukh ka cabin Ground Floor par Lab 1 ke paas hai."},
+    {"id":"fac_preet","name":"Prof. Preet Jain","aliases":["preet sir","prof preet","preet jain","lab 10 incharge"],"floor":2,"pano_id":"13_lab10","spoken_hinglish":"Prof. Preet Jain Second Floor corridor par Lab 10 me milenge."},
+    {"id":"fac_soni","name":"Prof. Soni","aliases":["soni sir","prof soni","lab 9 incharge"],"floor":1,"pano_id":"09_lab9","spoken_hinglish":"Prof. Soni ka desk First Floor par Lab 9 ke andar hai."},
+    {"id":"fac_anil","name":"Prof. Anil Jain","aliases":["anil sir","prof anil","anil jain","cabin 101"],"floor":0,"pano_id":"05_corridor_floor1","spoken_hinglish":"Prof. Anil Jain ka Cabin 101 Ground Floor faculty corridor me hai."},
+    {"id":"fac_toshi","name":"Prof. Toshi Mandloi","aliases":["toshi maam","prof toshi","toshi mandloi","cabin 102"],"floor":0,"pano_id":"05_corridor_floor1","spoken_hinglish":"Prof. Toshi Mandloi ka Cabin 102 Ground Floor par Cabin 101 ke paas hai."},
+    {"id":"fac_deepak","name":"Prof. Deepak Rathod","aliases":["deepak sir","prof deepak","deepak rathod","lab 5 faculty"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Prof. Deepak Rathod First Floor corridor par Lab 5 me hain."},
+    {"id":"fac_alka","name":"Prof. Alka","aliases":["alka maam","prof alka","lab 6 faculty"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Prof. Alka ka research room First Floor corridor par Lab 6 ke paas hai."},
+    {"id":"fac_yamini","name":"Prof. Yamini Makasare","aliases":["yamini maam","prof yamini","yamini makasare"],"floor":2,"pano_id":"14_corridor_floor3","spoken_hinglish":"Prof. Yamini Makasare Second Floor par Control Systems Lab me available hain."},
+    {"id":"fac_anjli","name":"Dr. Anjli Gupta","aliases":["anjli maam","dr anjli","anjli gupta"],"floor":2,"pano_id":"14_corridor_floor3","spoken_hinglish":"Dr. Anjli Gupta Second Floor par Control Systems Lab me milengi."},
+    {"id":"fac_dilip","name":"Dr. Dilip Mandloi","aliases":["dilip sir","dr dilip","dilip mandloi","cmos head"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Dr. Dilip Mandloi Second Floor east wing me CMOS Lab me milenge."},
+    {"id":"fac_nilesh","name":"Dr. Nilesh Patidar","aliases":["nilesh sir","dr nilesh","nilesh patidar"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Dr. Nilesh Patidar Second Floor par CMOS Lab me hain."},
+    {"id":"fac_staff_103","name":"Faculty Staff Room 103","aliases":["faculty 103","staff room","staff cabin","teachers room"],"floor":0,"pano_id":"05_corridor_floor1","spoken_hinglish":"Faculty staff room 103 Ground Floor corridor par hai."},
+    {"id":"fac_visiting","name":"Visiting Faculty Cabin 201","aliases":["cabin 201","visiting faculty","guest room"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Visiting faculty cabin 201 Second Floor south wing me hai."}
+  ],
+  "laboratories": [
+    {"id":"lab_mitsubishi","name":"Mitsubishi & PLC Automation Lab","aliases":["mitsubishi lab","plc lab","scada lab","automation lab","mitsubishi center","lalit sir ka lab"],"floor":1,"pano_id":"17_Mitsubishi_Lab","spoken_hinglish":"Mitsubishi aur PLC Automation Center of Excellence First Floor par hai. Screen par path follow kijiye."},
+    {"id":"lab_bosch","name":"Bosch Automotive & Embedded Systems Lab","aliases":["bosch lab","bosh lab","automotive lab","embedded lab","embedded systems"],"floor":2,"pano_id":"11_Bosch_lab","spoken_hinglish":"Bosch Automotive Lab second floor par hai, stairs ke theek samne. Route load kar rahi hoon."},
+    {"id":"lab_eyantra","name":"e-Yantra / Robotics & VLSI Lab","aliases":["eyantra lab","vlsi lab","robotics lab","e yantra","robots lab","robotics"],"floor":2,"pano_id":"15_Robotics_Lab","spoken_hinglish":"e-Yantra aur VLSI Robotics Lab Second Floor ke southwest end par hai. Tour path follow kijiye."},
+    {"id":"lab_01","name":"Lab 1","aliases":["lab 1","lab one","electronics lab 1","first lab","lab1"],"floor":0,"pano_id":"02_lab1","spoken_hinglish":"Lab 1 Ground Floor par, main foyer me ghuste hi left side par hai."},
+    {"id":"lab_02","name":"Lab 2","aliases":["lab 2","lab two","hardware lab","practical lab","lab2"],"floor":0,"pano_id":"03_lab2","spoken_hinglish":"Lab 2 Ground Floor par entrance foyer ke right side me hai."},
+    {"id":"lab_03","name":"Lab 3","aliases":["lab 3","lab three","systems lab","software lab","lab3"],"floor":0,"pano_id":"04_lab3","spoken_hinglish":"Lab 3 Ground Floor corridor ke west side me hai."},
+    {"id":"lab_04","name":"Lab 4","aliases":["lab 4","lab four","digital electronics","digital lab","lab4"],"floor":0,"pano_id":"05_corridor_floor1","spoken_hinglish":"Lab 4 Ground Floor central corridor ke samne hai."},
+    {"id":"lab_05","name":"Lab 5","aliases":["lab 5","lab five","programming lab","software engineering lab","lab5"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Lab 5 First Floor corridor me Prof. Deepak Rathod ke guidance me hai."},
+    {"id":"lab_06","name":"Lab 6","aliases":["lab 6","lab six","signal lab","signal analysis","lab6"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Lab 6 First Floor corridor par Prof. Alka ke room ke paas hai."},
+    {"id":"lab_07","name":"Lab 7","aliases":["lab 7","lab seven","dsp lab","computation lab","lab7"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Lab 7 First Floor corridor ke east side me hai."},
+    {"id":"lab_08","name":"Lab 8","aliases":["lab 8","lab eight","microarchitecture lab","lab8"],"floor":1,"pano_id":"08_corridor_floor2","spoken_hinglish":"Lab 8 First Floor corridor ke east side me hai."},
+    {"id":"lab_09","name":"Lab 9","aliases":["lab 9","lab nine","simulation lab","algorithms lab","lab9"],"floor":1,"pano_id":"09_lab9","spoken_hinglish":"Lab 9 First Floor par hai, jise Prof. Soni lead karte hain."},
+    {"id":"lab_10","name":"Lab 10","aliases":["lab 10","lab ten","computing lab","vlsi computing","lab10"],"floor":2,"pano_id":"13_lab10","spoken_hinglish":"Lab 10 Second Floor corridor par Prof. Preet Jain ke under hai."},
+    {"id":"lab_control","name":"Control Systems Lab","aliases":["control systems lab","control lab","control systems"],"floor":2,"pano_id":"14_corridor_floor3","spoken_hinglish":"Control Systems Lab Second Floor corridor me hai."},
+    {"id":"lab_cmos","name":"CMOS Microelectronics Lab","aliases":["cmos lab","semiconductor lab","ic lab","cmos"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"CMOS Microelectronics Lab Second Floor east wing me hai."},
+    {"id":"lab_microcontroller","name":"Microcontroller Lab","aliases":["microcontroller lab","8051 lab","arm lab","microcontroller"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Microcontroller Lab Second Floor par CMOS Lab ke paas hai."}
+  ],
+  "classrooms": [
+    {"id":"cr_107","name":"Classroom 107","aliases":["107","room 107","cr 107","class 107","classroom 107"],"floor":0,"pano_id":"06_stairs_floor1","spoken_hinglish":"Classroom 107 Ground Floor par main stairs ke paas hai."},
+    {"id":"cr_108","name":"Classroom 108","aliases":["108","room 108","cr 108","class 108","classroom 108"],"floor":0,"pano_id":"06_stairs_floor1","spoken_hinglish":"Classroom 108 Ground Floor north wing me stairs ke paas hai."},
+    {"id":"cr_207","name":"Classroom 207","aliases":["207","room 207","cr 207","class 207","classroom 207"],"floor":1,"pano_id":"07_stairs_floor2","spoken_hinglish":"Classroom 207 First Floor stairs landing par hai."},
+    {"id":"cr_208","name":"Classroom 208","aliases":["208","room 208","cr 208","class 208","classroom 208"],"floor":1,"pano_id":"07_stairs_floor2","spoken_hinglish":"Classroom 208 First Floor stairs landing par hai."},
+    {"id":"cr_209","name":"Classroom 209","aliases":["209","room 209","cr 209","class 209","classroom 209"],"floor":1,"pano_id":"07_stairs_floor2","spoken_hinglish":"Classroom 209 First Floor ke north wing me hai."},
+    {"id":"cr_210","name":"Classroom 210","aliases":["210","room 210","cr 210","class 210","classroom 210"],"floor":1,"pano_id":"07_stairs_floor2","spoken_hinglish":"Classroom 210 First Floor north corridor junction ke paas hai."},
+    {"id":"cr_305","name":"Classroom 305","aliases":["305","room 305","cr 305","class 305","classroom 305"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Classroom 305 Second Floor central walkway par hai."},
+    {"id":"cr_307","name":"Classroom 307","aliases":["307","room 307","cr 307","class 307","classroom 307"],"floor":2,"pano_id":"10_stairs_floor3","spoken_hinglish":"Classroom 307 second floor par north stairs ke samne milega."}
+  ],
+  "washrooms": [
+    {
+      "id": "wr_boys_gf",
+      "name": "Boys Washroom (Ground Floor)",
+      "aliases": ["boys washroom", "boys toilet", "washroom", "toilet", "restroom", "gents washroom", "gents toilet", "men toilet", "वॉशरूम", "टॉयलेट"],
+      "floor": 0,
+      "pano_id": "06_stairs_floor1",
+      "linked_pano_id": "06_stairs_floor1",
+      "target_branch": "to_washroom",
+      "spoken_hinglish": "Ground floor par boys washroom stairs ke theek paas hai. Screen par direction dekhiye."
+    },
+    {
+      "id": "wr_girls_1f",
+      "name": "Girls Washroom (First Floor)",
+      "aliases": ["girls washroom", "girls toilet", "ladies washroom", "female toilet", "ladies toilet", "women toilet", "गर्ल्स वॉशरूम", "महिला वॉशरूम"],
+      "floor": 1,
+      "pano_id": "07_stairs_floor2",
+      "linked_pano_id": "07_stairs_floor2",
+      "target_branch": "to_washroom",
+      "spoken_hinglish": "First floor par girls washroom landing ke bagal mein hai. Rasta follow kijiye."
+    },
+    {
+      "id": "wr_boys_2f",
+      "name": "Boys Washroom (Second Floor)",
+      "aliases": ["second floor washroom", "2nd floor toilet", "boys washroom second floor", "second floor boys toilet"],
+      "floor": 2,
+      "pano_id": "10_stairs_floor3",
+      "linked_pano_id": "10_stairs_floor3",
+      "target_branch": "to_washroom",
+      "spoken_hinglish": "Second floor par boys washroom left wing mein stairs ke paas hai."
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "_metadata": {
+    "status": "LOCKED",
+    "locked_at": "2026-10-04",
+    "verified": true,
+    "author": "EEE Block Admin",
+    "backup_type": "IMMUTABLE_TIMESTAMPED_BACKUP"
+  },
+  "16_Entrance_from_out_side": {
+    "yaw": 90.2,
+    "pitch": 11.3
+  },
+  "01_main_entrance_floor1": {
+    "yaw": 89.0,
+    "pitch": -1.1
+  },
+  "02_lab1": {
+    "yaw": 192.5,
+    "pitch": 0.0
+  },
+  "03_lab2": {
+    "yaw": 338.0,
+    "pitch": 0.0
+  },
+  "04_lab3": {
+    "yaw": 270.0,
+    "pitch": 0.0
+  },
+  "05_corridor_floor1": {
+    "yaw": 98.5,
+    "pitch": 0.0
+  },
+  "06_stairs_floor1": {
+    "default": {
+      "yaw": 170.0,
+      "pitch": 10.0
+    },
+    "yaw": 170.0,
+    "pitch": 10.0,
+    "branches": {
+      "to_first_floor_stairs": {
+        "label": "Going Up to 1st Floor (Staircase)",
+        "next_nodes": [
+          "07_stairs_floor2"
+        ],
+        "yaw": 170.0,
+        "pitch": 10.0
+      },
+      "to_washroom": {
+        "label": "Boys Washroom (Ground Floor)",
+        "next_nodes": [
+          "wr_boys_gf"
+        ],
+        "yaw": 45.0,
+        "pitch": 0.0
+      }
+    }
+  },
+  "07_stairs_floor2": {
+    "default": {
+      "yaw": 165.0,
+      "pitch": 0.0
+    },
+    "yaw": 165.0,
+    "pitch": 0.0,
+    "branches": {
+      "to_second_floor_stairs": {
+        "label": "Going Up to 2nd Floor (Staircase)",
+        "next_nodes": [
+          "10_stairs_floor3"
+        ],
+        "yaw": -100.0,
+        "pitch": 15.0
+      },
+      "to_first_floor_corridor": {
+        "label": "Entering 1st Floor Corridor (Mitsubishi / Lab 9)",
+        "next_nodes": [
+          "08_corridor_floor2",
+          "17_Mitsubishi_Lab",
+          "09_lab9"
+        ],
+        "yaw": 165.0,
+        "pitch": 0.0
+      },
+      "to_washroom": {
+        "label": "Girls Washroom (First Floor)",
+        "next_nodes": [
+          "wr_girls_1f"
+        ],
+        "yaw": 90.0,
+        "pitch": 0.0
+      }
+    }
+  },
+  "08_corridor_floor2": {
+    "yaw": 67.5,
+    "pitch": 0.0
+  },
+  "09_lab9": {
+    "yaw": 270.0,
+    "pitch": 0.0
+  },
+  "17_Mitsubishi_Lab": {
+    "yaw": 0.0,
+    "pitch": 0.0
+  },
+  "10_stairs_floor3": {
+    "default": {
+      "yaw": 0.0,
+      "pitch": 0.0
+    },
+    "yaw": 0.0,
+    "pitch": 0.0,
+    "branches": {
+      "to_bosch_lab": {
+        "label": "Entering Bosch Lab",
+        "next_nodes": [
+          "11_Bosch_lab"
+        ],
+        "yaw": 55.0,
+        "pitch": -2.0
+      },
+      "to_second_floor_corridor": {
+        "label": "Entering 2nd Floor Corridor (Robotics / VLSI)",
+        "next_nodes": [
+          "12_corridor_floor3",
+          "14_corridor_floor3",
+          "15_Robotics_Lab"
+        ],
+        "yaw": 0.0,
+        "pitch": 0.0
+      },
+      "to_washroom": {
+        "label": "Boys Washroom (Second Floor)",
+        "next_nodes": [
+          "wr_boys_2f"
+        ],
+        "yaw": -80.0,
+        "pitch": 0.0
+      }
+    }
+  },
+  "11_Bosch_lab": {
+    "yaw": 0.0,
+    "pitch": 0.0
+  },
+  "12_corridor_floor3": {
+    "yaw": 81.5,
+    "pitch": -3.4
+  },
+  "13_lab10": {
+    "yaw": 299.5,
+    "pitch": 0.0
+  },
+  "14_corridor_floor3": {
+    "yaw": 62.5,
+    "pitch": 0.0
+  },
+  "15_Robotics_Lab": {
+    "yaw": 0.0,
+    "pitch": 0.0
+  }
+}

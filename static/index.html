@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakhi · EEE Block Campus Kiosk — SVVV Indore</title>
+  <meta name="description"
+    content="AI-powered voice-guided 360° campus navigation kiosk for EEE department, SVVV Indore." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+
+  <!-- WebGL canvas – full-screen background -->
+  <canvas id="canvas-bg"></canvas>
+  <audio id="kiosk-audio-player" preload="auto"></audio>
+
+  <!-- ── Top Nav Capsule ── -->
+  <nav id="nav-capsule" aria-label="Brand navigation">
+    <span class="brand">Sakhi</span>
+    <span class="sep">•</span>
+    <span class="brand" style="color:rgba(248,250,252,0.55);font-weight:400">EEE Block</span>
+    <div class="status-dot" title="System online"></div>
+    <span class="sep">•</span>
+    <a href="/admin/" title="Live 360° Calibration Studio" style="color:rgba(56,189,248,0.9);font-size:0.75rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);transition:all 0.2s ease;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      Admin
+    </a>
+  </nav>
+
+  <!-- ── Floor Transition HUD ── -->
+  <div id="floor-hud" role="status" aria-live="polite">
+    <div id="floor-hud-card">
+      <div id="floor-hud-direction">⬆</div>
+      <div id="floor-hud-label">Ascending to 1st Floor</div>
+    </div>
+  </div>
+
+  <!-- ── Left-side Breadcrumb Bubble ── -->
+  <div id="route-breadcrumb-bubble" class="breadcrumb-bubble hidden" aria-label="Navigation path">
+    <div class="breadcrumb-title">Navigation Path</div>
+    <div id="breadcrumb-steps-list" class="breadcrumb-list"></div>
+  </div>
+
+  <!-- ── Showcase Countdown Capsule ── -->
+  <div id="showcase-hud" role="status" aria-live="polite">
+    <div class="showcase-dot"></div>
+    <span id="showcase-label">Exploring Robotics Lab</span>
+    <span style="color:rgba(248,250,252,0.4)">·</span>
+    <span id="showcase-count">15s</span>
+  </div>
+
+  <!-- ── Voice Status HUD (Hands-Free Indicator) ── -->
+  <div id="voice-status-hud" class="voice-status-hud hidden" role="status" aria-live="polite">
+    <div class="voice-wave-dot"></div>
+    <span id="voice-status-text">Sakhi sun rahi hai...</span>
+  </div>
+
+  <!-- ── Step label ── -->
+  <div id="step-label" aria-live="polite"></div>
+
+  <!-- ── Bottom Action Dock ── -->
+  <div id="action-dock">
+    <div id="pills-row" role="list" aria-label="Quick navigation shortcuts"></div>
+
+    <div id="search-bar" role="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(248,250,252,0.4)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input id="search-input" type="text" placeholder="Where do you want to go? Ask in Hindi or English…"
+        autocomplete="off" aria-label="Navigation search" />
+      <button id="mic-btn" title="Voice input" aria-label="Start voice input">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="23" />
+          <line x1="8" y1="23" x2="16" y2="23" />
+        </svg>
+      </button>
+      <button id="send-btn" title="Search" aria-label="Submit query">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Boot (all local, no CDN) ── -->
+  <script type="module">
+    import { initViewer, loadPano, SCENE_CALIBRATION, getCalibratedHeading } from "/static/js/viewer.js?v=5.0";
+    import "/static/js/ui.js?v=5.0";
+    import "/static/js/app.js?v=5.0";
+
+    try {
+      const canvas = document.getElementById("canvas-bg");
+      initViewer(canvas);
+      const startNode = "16_Entrance_from_out_side";
+      const startCalib = getCalibratedHeading(startNode);
+      loadPano(`/static/panos/${startNode}.jpg`, startCalib.yaw, startCalib.pitch);
+      console.log("[Boot] initViewer + loadPano fired with calibrated heading", startCalib);
+    } catch (e) {
+      console.error("[Boot] Fatal init error:", e);
+      document.body.insertAdjacentHTML("afterbegin",
+        `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:#f00;color:#fff;padding:20px;border-radius:8px;z-index:9999;font-family:monospace">
+         WebGL Error: ${e.message}</div>`);
+    }
+  </script>
+</body>
+
+</html>

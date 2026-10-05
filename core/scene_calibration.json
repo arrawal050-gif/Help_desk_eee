@@ -1,0 +1,120 @@
+{
+  "static_nodes": {
+    "16_Entrance_from_out_side": {
+      "yaw": 90.3,
+      "pitch": 11.1
+    },
+    "01_main_entrance_floor1": {
+      "yaw": 89.0,
+      "pitch": -1.1
+    },
+    "02_lab1": {
+      "yaw": 192.5,
+      "pitch": 0.0
+    },
+    "03_lab2": {
+      "yaw": 338.0,
+      "pitch": 0.0
+    },
+    "04_lab3": {
+      "yaw": 270.0,
+      "pitch": 0.0
+    },
+    "05_corridor_floor1": {
+      "yaw": 98.5,
+      "pitch": 0.0
+    },
+    "08_corridor_floor2": {
+      "yaw": 67.5,
+      "pitch": 0.0
+    },
+    "09_lab9": {
+      "yaw": 270.0,
+      "pitch": 0.0
+    },
+    "17_Mitsubishi_Lab": {
+      "yaw": 0.0,
+      "pitch": 0.0
+    },
+    "11_Bosch_lab": {
+      "yaw": 0.0,
+      "pitch": 0.0
+    },
+    "12_corridor_floor3": {
+      "yaw": 81.5,
+      "pitch": -3.4
+    },
+    "13_lab10": {
+      "yaw": 299.5,
+      "pitch": 0.0
+    },
+    "14_corridor_floor3": {
+      "yaw": 62.5,
+      "pitch": 0.0
+    },
+    "15_Robotics_Lab": {
+      "yaw": 0.0,
+      "pitch": 0.0
+    }
+  },
+  "dynamic_landing_nodes": {
+    "06_stairs_floor1": {
+      "default_yaw": 46.6,
+      "default_pitch": -8.0,
+      "branches": {
+        "to_stairs": {
+          "target_id": "07_stairs_floor2",
+          "yaw": 170.0,
+          "pitch": 10.0
+        },
+        "to_washroom": {
+          "target_id": "wr_boys_gf",
+          "yaw": 233.6,
+          "pitch": -1.1
+        }
+      }
+    },
+    "07_stairs_floor2": {
+      "default_yaw": 272.2,
+      "default_pitch": 1.0,
+      "branches": {
+        "to_stairs": {
+          "target_id": "10_stairs_floor3",
+          "yaw": 7.6,
+          "pitch": -2.4
+        },
+        "to_corridor": {
+          "target_id": "08_corridor_floor2",
+          "yaw": 89.9,
+          "pitch": -8.0
+        },
+        "to_washroom": {
+          "target_id": "wr_girls_1f",
+          "yaw": 154.3,
+          "pitch": -4.1
+        }
+      }
+    },
+    "10_stairs_floor3": {
+      "default_yaw": 327.4,
+      "default_pitch": -4.3,
+      "branches": {
+        "to_bosch": {
+          "target_id": "11_Bosch_lab",
+          "yaw": 212.4,
+          "pitch": -0.8
+        },
+        "to_corridor": {
+          "target_id": "12_corridor_floor3",
+          "yaw": 91.9,
+          "pitch": -4.7
+        },
+        "to_washroom": {
+          "target_id": "wr_boys_2f",
+          "yaw": 153.6,
+          "pitch": -6.4
+        }
+      }
+    }
+  }
+}

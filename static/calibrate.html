@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sakhi 360° Scene Calibration Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --panel-bg: rgba(13, 17, 27, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    header {
+      height: 60px;
+      background: rgba(10, 14, 23, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+
+    .brand-badge {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      transition: background 0.3s ease;
+    }
+
+    .status-dot.dirty {
+      background: var(--warning);
+      box-shadow: 0 0 8px var(--warning);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      border-color: #38bdf8;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(14, 165, 233, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #0284c7);
+      box-shadow: 0 0 25px rgba(14, 165, 233, 0.5);
+    }
+
+    /* ── Main Layout ── */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Sidebar: Nodes List ── */
+    aside {
+      width: 340px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid var(--panel-border);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .floor-tabs {
+      display: flex;
+      overflow-x: auto;
+      padding: 8px 16px;
+      gap: 6px;
+      border-bottom: 1px solid var(--panel-border);
+      scrollbar-width: none;
+    }
+
+    .floor-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.25);
+    }
+
+    .node-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .node-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .node-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .node-item.active {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .node-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .node-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .node-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      font-family: var(--mono);
+    }
+
+    .node-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+
+    .node-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: transparent;
+      flex-shrink: 0;
+    }
+
+    .node-item.modified .node-status-dot {
+      background: var(--warning);
+      box-shadow: 0 0 6px var(--warning);
+    }
+
+    /* ── Viewport Area ── */
+    .viewport-area {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #admin-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #admin-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* ── Reticle Overlay ── */
+    .reticle-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reticle-svg {
+      width: 90px;
+      height: 90px;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+    }
+
+    /* ── Live Readout HUD ── */
+    .live-hud {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 14, 23, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--panel-border);
+      border-radius: 30px;
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 15;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .hud-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .hud-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .hud-value {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      min-width: 60px;
+    }
+
+    .hud-heading-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    /* ── Bottom Controls Dock ── */
+    .control-dock {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(840px, 92%);
+      background: rgba(13, 17, 27, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 16px 22px;
+      z-index: 15;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .dock-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 10px;
+    }
+
+    .dock-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dock-node-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .dock-node-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ── Contextual Branch Intent Row ── */
+    .dock-branch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.03));
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 10px;
+      padding: 8px 14px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .branch-left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .branch-label-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .branch-select {
+      flex: 1;
+      background: rgba(13, 17, 27, 0.95);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #f1f5f9;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 8px;
+      outline: none;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.12);
+      transition: all 0.2s ease;
+      min-width: 280px;
+    }
+
+    .branch-select:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+    }
+
+    .branch-select:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .branch-badge {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      white-space: nowrap;
+    }
+
+    .branch-badge-small {
+      background: rgba(56, 189, 248, 0.15) !important;
+      color: #38bdf8 !important;
+      border: 1px solid rgba(56, 189, 248, 0.35) !important;
+      font-size: 10px !important;
+      padding: 1px 6px !important;
+    }
+
+    .dock-controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .control-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .field-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .angle-slider {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .angle-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-glow);
+      transition: transform 0.1s;
+    }
+
+    .angle-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .angle-number {
+      width: 75px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      color: #fff;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 8px;
+      text-align: right;
+      outline: none;
+    }
+
+    .angle-number:focus {
+      border-color: var(--accent);
+    }
+
+    .nudge-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nudge-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nudge-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .quick-snaps {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .snap-btn {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .snap-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    /* ── Toast Notification ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(16, 185, 129, 0.95);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+      z-index: 100;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: rgba(239, 68, 68, 0.95);
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    .btn.loading .spinner {
+      display: inline-block;
+    }
+
+    .btn.loading .btn-text {
+      opacity: 0.7;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Top Bar ── -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        </svg>
+      </div>
+      <div class="brand-title">Sakhi 360° Scene Calibration Studio</div>
+      <div class="brand-badge">Admin</div>
+      <div class="brand-badge" style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35);">LOCKED</div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">All calibrations synced</span>
+      </div>
+
+      <a href="/" target="_blank" class="btn" title="Open Kiosk UI in new tab">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        Test in Kiosk
+      </a>
+
+      <button id="reset-all-btn" class="btn" title="Revert unsaved edits back to server version">
+        Revert All
+      </button>
+
+      <button id="save-all-btn" class="btn btn-primary">
+        <div class="spinner"></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span class="btn-text">Save All to Codebase</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── App Body ── -->
+  <div class="app-body">
+
+    <!-- ── Sidebar: Node Selector ── -->
+    <aside>
+      <div class="search-box">
+        <input type="text" id="search-input" class="search-input" placeholder="Search 17 panorama nodes...">
+      </div>
+
+      <div class="floor-tabs" id="floor-tabs">
+        <button class="tab-btn active" data-floor="all">All (17)</button>
+        <button class="tab-btn" data-floor="0">Ground Floor</button>
+        <button class="tab-btn" data-floor="1">1st Floor</button>
+        <button class="tab-btn" data-floor="2">2nd Floor</button>
+      </div>
+
+      <div class="node-list" id="node-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </aside>
+
+    <!-- ── 360 Viewport Area ── -->
+    <main class="viewport-area">
+      <canvas id="admin-canvas"></canvas>
+
+      <!-- Center Reticle Overlay -->
+      <div class="reticle-container">
+        <svg class="reticle-svg" viewBox="0 0 100 100" fill="none">
+          <!-- Outer Circle with Tick Marks -->
+          <circle cx="50" cy="50" r="32" stroke="rgba(56, 189, 248, 0.4)" stroke-width="1.5" stroke-dasharray="2 6" />
+          <!-- Inner Precision Ring -->
+          <circle cx="50" cy="50" r="14" stroke="#38bdf8" stroke-width="1.5" />
+          <circle cx="50" cy="50" r="3" fill="#38bdf8" />
+          <!-- Crosshair arms with gap -->
+          <line x1="50" y1="6" x2="50" y2="28" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+          <line x1="50" y1="72" x2="50" y2="94" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+          <line x1="6" y1="50" x2="28" y2="50" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+          <line x1="72" y1="50" x2="94" y2="50" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- Live Floating Angle Readout -->
+      <div class="live-hud">
+        <div class="hud-stat">
+          <span class="hud-label">Yaw</span>
+          <span class="hud-value" id="hud-yaw">270.0°</span>
+        </div>
+        <div class="hud-stat">
+          <span class="hud-label">Pitch</span>
+          <span class="hud-value" id="hud-pitch">0.0°</span>
+        </div>
+        <div class="hud-heading-tag" id="hud-cardinal">WEST (270°)</div>
+      </div>
+
+      <!-- Bottom Calibration Controls Dock -->
+      <div class="control-dock">
+        <div class="dock-header">
+          <div class="dock-title-group">
+            <span class="dock-node-title" id="dock-title">College Main Campus Entrance</span>
+            <span class="dock-node-id" id="dock-id">16_Entrance_from_out_side</span>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button id="reset-current-node-btn" class="btn" style="padding: 4px 10px; font-size: 11px;">
+              Reset to Saved
+            </button>
+          </div>
+        </div>
+
+        <!-- Contextual Branch Target / Intent Row (Shown for landing nodes) -->
+        <div class="dock-branch-row" id="dock-branch-row" style="display: none;">
+          <div class="branch-left-group">
+            <span class="branch-label-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="6" y1="3" x2="6" y2="15"></line>
+                <circle cx="18" cy="6" r="3"></circle>
+                <circle cx="6" cy="18" r="3"></circle>
+                <path d="M18 9a9 9 0 0 1-9 9"></path>
+              </svg>
+              Branch Target / Intent:
+            </span>
+            <select id="branch-select" class="branch-select" aria-label="Branch Target Intent Selection">
+              <!-- Dynamically populated options -->
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="lock-branch-btn" class="btn" style="padding: 5px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;" title="Lock current viewport angle to selected branch">
+              Lock View for Selected Branch
+            </button>
+            <span class="branch-badge" id="branch-badge">Contextual View</span>
+          </div>
+        </div>
+
+        <div class="dock-controls-row">
+          <!-- Yaw Field -->
+          <div class="control-field">
+            <div class="field-header">
+              <span class="field-label">
+                Horizontal Heading (Yaw)
+              </span>
+              <div class="quick-snaps">
+                <button class="snap-btn" data-yaw="0">0° N</button>
+                <button class="snap-btn" data-yaw="90">90° E</button>
+                <button class="snap-btn" data-yaw="180">180° S</button>
+                <button class="snap-btn" data-yaw="270">270° W</button>
+              </div>
+            </div>
+
+            <div class="field-input-group">
+              <input type="range" id="yaw-slider" class="angle-slider" min="0" max="360" step="0.5" value="270">
+              <input type="number" id="yaw-input" class="angle-number" min="0" max="360" step="0.5" value="270.0">
+              <div class="nudge-group">
+                <button class="nudge-btn" data-delta-yaw="-45">-45°</button>
+                <button class="nudge-btn" data-delta-yaw="-5">-5°</button>
+                <button class="nudge-btn" data-delta-yaw="-1">-1°</button>
+                <button class="nudge-btn" data-delta-yaw="1">+1°</button>
+                <button class="nudge-btn" data-delta-yaw="5">+5°</button>
+                <button class="nudge-btn" data-delta-yaw="45">+45°</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pitch Field -->
+          <div class="control-field">
+            <div class="field-header">
+              <span class="field-label">
+                Vertical Tilt (Pitch)
+              </span>
+              <div class="quick-snaps">
+                <button class="snap-btn" data-pitch="-10">-10° Down</button>
+                <button class="snap-btn" data-pitch="0">0° Level</button>
+                <button class="snap-btn" data-pitch="10">+10° Up</button>
+              </div>
+            </div>
+
+            <div class="field-input-group">
+              <input type="range" id="pitch-slider" class="angle-slider" min="-85" max="85" step="0.5" value="0">
+              <input type="number" id="pitch-input" class="angle-number" min="-85" max="85" step="0.5" value="0.0">
+              <div class="nudge-group">
+                <button class="nudge-btn" data-delta-pitch="-10">-10°</button>
+                <button class="nudge-btn" data-delta-pitch="-2">-2°</button>
+                <button class="nudge-btn" data-delta-pitch="0">Level</button>
+                <button class="nudge-btn" data-delta-pitch="2">+2°</button>
+                <button class="nudge-btn" data-delta-pitch="10">+10°</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span id="toast-msg">Calibrations successfully saved to disk!</span>
+  </div>
+
+  <!-- ── Studio Logic ── -->
+  <script type="module">
+    import { initViewer, loadPano, setCameraHeading, getCameraHeading, onHeadingChange } from "/static/js/viewer.js?v=3.0";
+
+    // ── Application State ──
+    let nodes = [];
+    let savedCalibration = {};
+    let workingCalibration = {};
+    let activeNodeId = null;
+    let currentBranchKey = "default";
+    let isUserDragging = false;
+
+    // DOM Elements
+    const canvas = document.getElementById("admin-canvas");
+    const nodeListEl = document.getElementById("node-list");
+    const searchInput = document.getElementById("search-input");
+    const floorTabs = document.getElementById("floor-tabs");
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const saveAllBtn = document.getElementById("save-all-btn");
+    const resetAllBtn = document.getElementById("reset-all-btn");
+    const resetCurrentNodeBtn = document.getElementById("reset-current-node-btn");
+
+    const hudYaw = document.getElementById("hud-yaw");
+    const hudPitch = document.getElementById("hud-pitch");
+    const hudCardinal = document.getElementById("hud-cardinal");
+
+    const dockTitle = document.getElementById("dock-title");
+    const dockId = document.getElementById("dock-id");
+    const dockBranchRow = document.getElementById("dock-branch-row");
+    const branchSelect = document.getElementById("branch-select");
+    const lockBranchBtn = document.getElementById("lock-branch-btn");
+    const branchBadge = document.getElementById("branch-badge");
+
+    const yawSlider = document.getElementById("yaw-slider");
+    const yawInput = document.getElementById("yaw-input");
+    const pitchSlider = document.getElementById("pitch-slider");
+    const pitchInput = document.getElementById("pitch-input");
+    const toast = document.getElementById("toast");
+    const toastMsg = document.getElementById("toast-msg");
+
+    let toastTimer = null;
+
+    // ── Init Studio ──
+    async function initStudio() {
+      initViewer(canvas);
+
+      // Listen for camera rotations inside Three.js
+      onHeadingChange((heading) => {
+        updateHudReadout(heading.yaw, heading.pitch);
+
+        // If user rotated camera while a node is active, sync active target heading
+        if (activeNodeId) {
+          syncActiveNodeHeading(heading.yaw, heading.pitch);
+        }
+      });
+
+      await fetchCalibrationData();
+
+      // Keyboard navigation
+      window.addEventListener("keydown", handleKeydown);
+
+      // Input events
+      setupInputListeners();
+    }
+
+    // ── Load Data from Backend ──
+    async function fetchCalibrationData() {
+      try {
+        const res = await fetch("/api/calibration/nodes");
+        const data = await res.json();
+        nodes = data.nodes || [];
+        savedCalibration = JSON.parse(JSON.stringify(data.calibration || {}));
+        workingCalibration = JSON.parse(JSON.stringify(savedCalibration));
+
+        renderNodeList();
+
+        // Select first node (or previous active)
+        const targetId = (activeNodeId && nodes.some(n => n.id === activeNodeId))
+          ? activeNodeId
+          : (nodes[0]?.id || "16_Entrance_from_out_side");
+
+        selectNode(targetId);
+        updateDirtyState();
+      } catch (err) {
+        console.error("Failed to fetch calibration data:", err);
+        showToast("Error loading calibration data from server", true);
+      }
+    }
+
+    // ── Helper: Check if Node has Unsaved Changes ──
+    function isNodeDirty(id) {
+      const curr = workingCalibration[id];
+      const orig = savedCalibration[id];
+      if (!orig || !curr) return false;
+      if (curr.branches && orig.branches) {
+        const currDefYaw = curr.default ? curr.default.yaw : (curr.yaw ?? 0);
+        const currDefPitch = curr.default ? curr.default.pitch : (curr.pitch ?? 0);
+        const origDefYaw = orig.default ? orig.default.yaw : (orig.yaw ?? 0);
+        const origDefPitch = orig.default ? orig.default.pitch : (orig.pitch ?? 0);
+        if (currDefYaw !== origDefYaw || currDefPitch !== origDefPitch) {
+          return true;
+        }
+        for (const bk in curr.branches) {
+          const cb = curr.branches[bk];
+          const ob = orig.branches[bk];
+          if (!ob || cb.yaw !== ob.yaw || cb.pitch !== ob.pitch) {
+            return true;
+          }
+        }
+        return false;
+      }
+      return curr.yaw !== orig.yaw || curr.pitch !== orig.pitch;
+    }
+
+    // ── Helper: Resolve Active Heading for Node ──
+    function getActiveHeadingForNode(nodeId) {
+      const calib = workingCalibration[nodeId];
+      if (!calib) return { yaw: 0, pitch: 0 };
+      if (calib.branches && currentBranchKey && currentBranchKey !== "default") {
+        const b = calib.branches[currentBranchKey];
+        if (b) return { yaw: b.yaw, pitch: b.pitch };
+      }
+      if (calib.default) {
+        return { yaw: calib.default.yaw, pitch: calib.default.pitch };
+      }
+      return { yaw: calib.yaw ?? 0, pitch: calib.pitch ?? 0 };
+    }
+
+    // ── Render Node List ──
+    function renderNodeList() {
+      const query = searchInput.value.trim().toLowerCase();
+      const activeTab = floorTabs.querySelector(".tab-btn.active")?.dataset.floor || "all";
+
+      nodeListEl.innerHTML = "";
+
+      const filtered = nodes.filter(node => {
+        const matchesFloor = activeTab === "all" || String(node.floor) === activeTab;
+        const matchesSearch = !query ||
+          node.title.toLowerCase().includes(query) ||
+          node.id.toLowerCase().includes(query) ||
+          node.floor_name.toLowerCase().includes(query);
+        return matchesFloor && matchesSearch;
+      });
+
+      filtered.forEach(node => {
+        const calib = workingCalibration[node.id] || { yaw: node.yaw, pitch: node.pitch };
+        const isModified = isNodeDirty(node.id);
+        const hasBranches = Boolean(calib.branches && Object.keys(calib.branches).length > 0);
+        const branchCount = hasBranches ? Object.keys(calib.branches).length : 0;
+
+        const rawBaseYaw = calib.default ? calib.default.yaw : (calib.yaw ?? node.yaw ?? 0);
+        const rawBasePitch = calib.default ? calib.default.pitch : (calib.pitch ?? node.pitch ?? 0);
+        const baseYaw = Number(rawBaseYaw ?? 0);
+        const basePitch = Number(rawBasePitch ?? 0);
+
+        const item = document.createElement("div");
+        item.className = `node-item ${node.id === activeNodeId ? "active" : ""} ${isModified ? "modified" : ""}`;
+        item.dataset.id = node.id;
+        item.innerHTML = `
+          <div class="node-info">
+            <div class="node-title">${node.title}</div>
+            <div class="node-subtitle">
+              <span class="node-badge">${node.floor_name}</span>
+              ${hasBranches ? `<span class="node-badge branch-badge-small">${branchCount} Branches</span>` : ""}
+              <span>Y: ${baseYaw.toFixed(1)}°</span>
+              <span>P: ${basePitch.toFixed(1)}°</span>
+            </div>
+          </div>
+          <div class="node-status-dot"></div>
+        `;
+
+        item.addEventListener("click", () => selectNode(node.id));
+        nodeListEl.appendChild(item);
+      });
+    }
+
+    // ── Populate Branch Dropdown ──
+    function populateBranchDropdown(calib) {
+      if (!branchSelect) return;
+      branchSelect.innerHTML = "";
+
+      const defOption = document.createElement("option");
+      defOption.value = "default";
+      const defYaw = Number(calib.default?.yaw ?? calib.yaw ?? 0);
+      const defPitch = Number(calib.default?.pitch ?? calib.pitch ?? 0);
+      defOption.textContent = `General Base View (Yaw: ${defYaw.toFixed(1)}°, Pitch: ${defPitch.toFixed(1)}°)`;
+      branchSelect.appendChild(defOption);
+
+      if (calib.branches) {
+        for (const bKey in calib.branches) {
+          const b = calib.branches[bKey];
+          if (!b) continue;
+          const opt = document.createElement("option");
+          opt.value = bKey;
+          const nextStr = b.next_nodes ? b.next_nodes.join(", ") : (b.target_id || "");
+          const bYaw = Number(b.yaw ?? 0);
+          const bPitch = Number(b.pitch ?? 0);
+          opt.textContent = `${b.label || bKey} → [${nextStr}] (Yaw: ${bYaw.toFixed(1)}°, Pitch: ${bPitch.toFixed(1)}°)`;
+          branchSelect.appendChild(opt);
+        }
+      }
+
+      if (currentBranchKey && (currentBranchKey === "default" || calib.branches?.[currentBranchKey])) {
+        branchSelect.value = currentBranchKey;
+      } else {
+        currentBranchKey = "default";
+        branchSelect.value = "default";
+      }
+
+      updateBranchBadge(calib);
+    }
+
+    function updateBranchOptionText(branchKey, yaw, pitch) {
+      if (!branchSelect) return;
+      const opt = branchSelect.querySelector(`option[value="${branchKey}"]`);
+      if (!opt) return;
+      const calib = workingCalibration[activeNodeId];
+      if (!calib) return;
+      if (branchKey === "default") {
+        opt.textContent = `General Base View (Yaw: ${yaw.toFixed(1)}°, Pitch: ${pitch.toFixed(1)}°)`;
+      } else if (calib.branches?.[branchKey]) {
+        const b = calib.branches[branchKey];
+        const nextStr = b.next_nodes ? b.next_nodes.join(", ") : "";
+        opt.textContent = `${b.label} → [${nextStr}] (Yaw: ${yaw.toFixed(1)}°, Pitch: ${pitch.toFixed(1)}°)`;
+      }
+    }
+
+    function updateBranchBadge(calib) {
+      if (!branchBadge) return;
+      if (!currentBranchKey || currentBranchKey === "default") {
+        branchBadge.textContent = "Base View";
+        branchBadge.style.background = "rgba(255, 255, 255, 0.08)";
+        branchBadge.style.color = "var(--text-muted)";
+        branchBadge.style.borderColor = "var(--panel-border)";
+      } else if (calib.branches?.[currentBranchKey]) {
+        const b = calib.branches[currentBranchKey];
+        const targetNode = b.next_nodes?.[0] || "";
+        branchBadge.textContent = `Target: ${targetNode}`;
+        branchBadge.style.background = "rgba(56, 189, 248, 0.15)";
+        branchBadge.style.color = "#38bdf8";
+        branchBadge.style.borderColor = "rgba(56, 189, 248, 0.3)";
+      }
+    }
+
+    // ── Select Node ──
+    function selectNode(nodeId) {
+      activeNodeId = nodeId;
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      const calib = workingCalibration[nodeId] || { yaw: node.yaw, pitch: node.pitch };
+
+      // Update Dock text
+      dockTitle.textContent = node.title;
+      dockId.textContent = node.id;
+
+      // Handle contextual branches
+      if (calib.branches && Object.keys(calib.branches).length > 0) {
+        dockBranchRow.style.display = "flex";
+        currentBranchKey = "default";
+        populateBranchDropdown(calib);
+      } else {
+        dockBranchRow.style.display = "none";
+        currentBranchKey = null;
+      }
+
+      const activeHead = getActiveHeadingForNode(nodeId);
+
+      // Update control inputs
+      yawSlider.value = activeHead.yaw;
+      yawInput.value = activeHead.yaw.toFixed(1);
+      pitchSlider.value = activeHead.pitch;
+      pitchInput.value = activeHead.pitch.toFixed(1);
+
+      // Load into Three.js panorama
+      loadPano(node.image, activeHead.yaw, activeHead.pitch);
+      setCameraHeading(activeHead.yaw, activeHead.pitch);
+
+      // Highlight active node card
+      document.querySelectorAll(".node-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.id === nodeId);
+      });
+    }
+
+    // ── Live Heading Sync ──
+    function syncActiveNodeHeading(rawYaw, rawPitch) {
+      const normYaw = Math.round((((rawYaw % 360) + 360) % 360) * 10) / 10;
+      const normPitch = Math.round(Math.max(-85, Math.min(85, rawPitch)) * 10) / 10;
+
+      if (!workingCalibration[activeNodeId]) {
+        workingCalibration[activeNodeId] = { yaw: normYaw, pitch: normPitch };
+      }
+
+      const calib = workingCalibration[activeNodeId];
+
+      if (calib.branches && currentBranchKey && currentBranchKey !== "default" && calib.branches[currentBranchKey]) {
+        calib.branches[currentBranchKey].yaw = normYaw;
+        calib.branches[currentBranchKey].pitch = normPitch;
+      } else {
+        if (calib.default) {
+          calib.default.yaw = normYaw;
+          calib.default.pitch = normPitch;
+        }
+        calib.yaw = normYaw;
+        calib.pitch = normPitch;
+      }
+
+      // Update inputs without triggering loops
+      yawSlider.value = normYaw;
+      yawInput.value = normYaw.toFixed(1);
+      pitchSlider.value = normPitch;
+      pitchInput.value = normPitch.toFixed(1);
+
+      updateBranchOptionText(currentBranchKey || "default", normYaw, normPitch);
+      updateNodeCardSubtitle(activeNodeId);
+      updateDirtyState();
+    }
+
+    function updateNodeCardSubtitle(nodeId) {
+      const card = document.querySelector(`.node-item[data-id="${nodeId}"]`);
+      if (!card) return;
+      const subtitle = card.querySelector(".node-subtitle");
+      const calib = workingCalibration[nodeId];
+      if (subtitle && calib) {
+        const node = nodes.find(n => n.id === nodeId);
+        const floorName = node ? node.floor_name : "";
+        const hasBranches = Boolean(calib.branches && Object.keys(calib.branches).length > 0);
+        const branchCount = hasBranches ? Object.keys(calib.branches).length : 0;
+        const activeHead = getActiveHeadingForNode(nodeId);
+
+        subtitle.innerHTML = `
+          <span class="node-badge">${floorName}</span>
+          ${hasBranches ? `<span class="node-badge branch-badge-small">${branchCount} Branches</span>` : ""}
+          <span>Y: ${activeHead.yaw.toFixed(1)}°</span>
+          <span>P: ${activeHead.pitch.toFixed(1)}°</span>
+        `;
+      }
+      card.classList.toggle("modified", isNodeDirty(nodeId));
+    }
+
+    // ── HUD Readout Helper ──
+    function updateHudReadout(yaw, pitch) {
+      const normYaw = (((yaw % 360) + 360) % 360);
+      hudYaw.textContent = `${normYaw.toFixed(1)}°`;
+      hudPitch.textContent = `${pitch.toFixed(1)}°`;
+
+      // Cardinal direction
+      let cardinal = "NORTH (0°)";
+      if (normYaw >= 45 && normYaw < 135) cardinal = "EAST (90°)";
+      else if (normYaw >= 135 && normYaw < 225) cardinal = "SOUTH (180°)";
+      else if (normYaw >= 225 && normYaw < 315) cardinal = "WEST (270°)";
+      hudCardinal.textContent = cardinal;
+    }
+
+    // ── Dirty State Calculation ──
+    function updateDirtyState() {
+      let dirtyCount = 0;
+      for (const id in workingCalibration) {
+        if (isNodeDirty(id)) dirtyCount++;
+      }
+
+      if (dirtyCount > 0) {
+        statusDot.classList.add("dirty");
+        statusText.textContent = `${dirtyCount} unsaved change${dirtyCount > 1 ? "s" : ""}`;
+      } else {
+        statusDot.classList.remove("dirty");
+        statusText.textContent = "Locked & synced across codebase";
+      }
+    }
+
+    // ── Input Listeners ──
+    function setupInputListeners() {
+      // Search
+      searchInput.addEventListener("input", renderNodeList);
+
+      // Floor tabs
+      floorTabs.addEventListener("click", e => {
+        if (!e.target.classList.contains("tab-btn")) return;
+        floorTabs.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        e.target.classList.add("active");
+        renderNodeList();
+      });
+
+      // Branch select change
+      branchSelect.addEventListener("change", () => {
+        currentBranchKey = branchSelect.value;
+        const calib = workingCalibration[activeNodeId];
+        if (!calib) return;
+
+        const activeHead = getActiveHeadingForNode(activeNodeId);
+
+        yawSlider.value = activeHead.yaw;
+        yawInput.value = activeHead.yaw.toFixed(1);
+        pitchSlider.value = activeHead.pitch;
+        pitchInput.value = activeHead.pitch.toFixed(1);
+
+        setCameraHeading(activeHead.yaw, activeHead.pitch);
+        updateBranchBadge(calib);
+      });
+
+      // Lock current view to active branch
+      if (lockBranchBtn) {
+        lockBranchBtn.addEventListener("click", () => {
+          if (!activeNodeId) return;
+          const heading = getCameraHeading();
+          syncActiveNodeHeading(heading.yaw, heading.pitch);
+          const calib = workingCalibration[activeNodeId];
+          const branchName = (currentBranchKey && currentBranchKey !== "default")
+            ? (calib.branches?.[currentBranchKey]?.label || currentBranchKey)
+            : "General Base View";
+          showToast(`Locked view for: ${branchName} (Yaw: ${heading.yaw}°, Pitch: ${heading.pitch}°)`);
+        });
+      }
+
+      // Yaw slider & number
+      yawSlider.addEventListener("input", () => {
+        const val = parseFloat(yawSlider.value);
+        yawInput.value = val.toFixed(1);
+        applyAngleChange(val, parseFloat(pitchSlider.value));
+      });
+
+      yawInput.addEventListener("change", () => {
+        let val = parseFloat(yawInput.value) || 0;
+        val = ((val % 360) + 360) % 360;
+        yawSlider.value = val;
+        yawInput.value = val.toFixed(1);
+        applyAngleChange(val, parseFloat(pitchSlider.value));
+      });
+
+      // Pitch slider & number
+      pitchSlider.addEventListener("input", () => {
+        const val = parseFloat(pitchSlider.value);
+        pitchInput.value = val.toFixed(1);
+        applyAngleChange(parseFloat(yawSlider.value), val);
+      });
+
+      pitchInput.addEventListener("change", () => {
+        let val = parseFloat(pitchInput.value) || 0;
+        val = Math.max(-85, Math.min(85, val));
+        pitchSlider.value = val;
+        pitchInput.value = val.toFixed(1);
+        applyAngleChange(parseFloat(yawSlider.value), val);
+      });
+
+      // Nudge buttons
+      document.querySelectorAll("[data-delta-yaw]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const delta = parseFloat(btn.dataset.deltaYaw);
+          let curr = parseFloat(yawInput.value) || 0;
+          curr = (((curr + delta) % 360) + 360) % 360;
+          yawSlider.value = curr;
+          yawInput.value = curr.toFixed(1);
+          applyAngleChange(curr, parseFloat(pitchSlider.value));
+        });
+      });
+
+      document.querySelectorAll("[data-delta-pitch]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const delta = parseFloat(btn.dataset.deltaPitch);
+          let curr = (delta === 0) ? 0 : ((parseFloat(pitchInput.value) || 0) + delta);
+          curr = Math.max(-85, Math.min(85, curr));
+          pitchSlider.value = curr;
+          pitchInput.value = curr.toFixed(1);
+          applyAngleChange(parseFloat(yawSlider.value), curr);
+        });
+      });
+
+      // Quick snap buttons
+      document.querySelectorAll("[data-yaw]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const val = parseFloat(btn.dataset.yaw);
+          yawSlider.value = val;
+          yawInput.value = val.toFixed(1);
+          applyAngleChange(val, parseFloat(pitchSlider.value));
+        });
+      });
+
+      document.querySelectorAll("[data-pitch]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const val = parseFloat(btn.dataset.pitch);
+          pitchSlider.value = val;
+          pitchInput.value = val.toFixed(1);
+          applyAngleChange(parseFloat(yawSlider.value), val);
+        });
+      });
+
+      // Reset current node
+      resetCurrentNodeBtn.addEventListener("click", () => {
+        if (!activeNodeId) return;
+        const orig = savedCalibration[activeNodeId];
+        if (orig) {
+          workingCalibration[activeNodeId] = JSON.parse(JSON.stringify(orig));
+          const calib = workingCalibration[activeNodeId];
+          if (calib.branches) {
+            populateBranchDropdown(calib);
+          }
+          const activeHead = getActiveHeadingForNode(activeNodeId);
+          yawSlider.value = activeHead.yaw;
+          yawInput.value = activeHead.yaw.toFixed(1);
+          pitchSlider.value = activeHead.pitch;
+          pitchInput.value = activeHead.pitch.toFixed(1);
+          setCameraHeading(activeHead.yaw, activeHead.pitch);
+          updateNodeCardSubtitle(activeNodeId);
+          updateDirtyState();
+          showToast(`Reverted ${activeNodeId} to saved calibration.`);
+        }
+      });
+
+      // Reset all edits
+      resetAllBtn.addEventListener("click", () => {
+        workingCalibration = JSON.parse(JSON.stringify(savedCalibration));
+        renderNodeList();
+        if (activeNodeId) selectNode(activeNodeId);
+        updateDirtyState();
+        showToast("Reverted all modifications back to server version.");
+      });
+
+      // Save all to codebase
+      saveAllBtn.addEventListener("click", handleSaveAll);
+    }
+
+    function applyAngleChange(yaw, pitch) {
+      setCameraHeading(yaw, pitch);
+      if (activeNodeId) {
+        syncActiveNodeHeading(yaw, pitch);
+      }
+    }
+
+    // ── Save All to Codebase ──
+    async function handleSaveAll() {
+      try {
+        saveAllBtn.classList.add("loading");
+        saveAllBtn.disabled = true;
+
+        const payload = {};
+        for (const id in workingCalibration) {
+          if (id === "static_nodes" || id === "dynamic_landing_nodes" || id === "_metadata" || id === "admin_override" || id === "_admin_override") continue;
+          const item = workingCalibration[id];
+          if (!item || typeof item !== "object") continue;
+
+          if (item.branches && typeof item.branches === "object") {
+            const normBranches = {};
+            for (const bKey in item.branches) {
+              const b = item.branches[bKey];
+              if (!b || typeof b !== "object") continue;
+              const bYaw = Number(b.yaw ?? 0);
+              const bPitch = Number(b.pitch ?? 0);
+              normBranches[bKey] = {
+                label: b.label || bKey,
+                target_id: b.target_id || "",
+                next_nodes: b.next_nodes || (b.target_id ? [b.target_id] : []),
+                yaw: Number(bYaw.toFixed(1)),
+                pitch: Number(bPitch.toFixed(1)),
+              };
+            }
+            const rawDefYaw = item.default?.yaw ?? item.yaw ?? 0;
+            const rawDefPitch = item.default?.pitch ?? item.pitch ?? 0;
+            const defYaw = Number(Number(rawDefYaw).toFixed(1));
+            const defPitch = Number(Number(rawDefPitch).toFixed(1));
+            payload[id] = {
+              default: { yaw: defYaw, pitch: defPitch },
+              yaw: defYaw,
+              pitch: defPitch,
+              branches: normBranches
+            };
+          } else {
+            const rawY = item.yaw ?? (item.default ? item.default.yaw : 0);
+            const rawP = item.pitch ?? (item.default ? item.default.pitch : 0);
+            payload[id] = {
+              yaw: Number(Number(rawY ?? 0).toFixed(1)),
+              pitch: Number(Number(rawP ?? 0).toFixed(1)),
+            };
+          }
+        }
+
+        payload.admin_override = true;
+        const res = await fetch("/api/calibration/save?admin_override=true", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Override": "true"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || "Save failed");
+
+        // Sync saved state
+        savedCalibration = JSON.parse(JSON.stringify(workingCalibration));
+        renderNodeList();
+        updateDirtyState();
+
+        showToast(result.message || "Calibrations successfully saved to codebase!");
+      } catch (err) {
+        console.error("Save error:", err);
+        showToast(`Save failed: ${err.message}`, true);
+      } finally {
+        saveAllBtn.classList.remove("loading");
+        saveAllBtn.disabled = false;
+      }
+    }
+
+    // ── Keyboard Navigation ──
+    function handleKeydown(e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+
+      // Ctrl + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleSaveAll();
+        return;
+      }
+
+      const delta = e.shiftKey ? 5 : 1;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        let y = (((parseFloat(yawSlider.value) - delta) % 360) + 360) % 360;
+        applyAngleChange(y, parseFloat(pitchSlider.value));
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        let y = (((parseFloat(yawSlider.value) + delta) % 360) + 360) % 360;
+        applyAngleChange(y, parseFloat(pitchSlider.value));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        let p = Math.max(-85, Math.min(85, parseFloat(pitchSlider.value) + delta));
+        applyAngleChange(parseFloat(yawSlider.value), p);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        let p = Math.max(-85, Math.min(85, parseFloat(pitchSlider.value) - delta));
+        applyAngleChange(parseFloat(yawSlider.value), p);
+      } else if (e.key === "[") {
+        // Prev node
+        e.preventDefault();
+        switchNodeByOffset(-1);
+      } else if (e.key === "]") {
+        // Next node
+        e.preventDefault();
+        switchNodeByOffset(1);
+      }
+    }
+
+    function switchNodeByOffset(offset) {
+      if (!nodes.length) return;
+      const idx = nodes.findIndex(n => n.id === activeNodeId);
+      const nextIdx = (idx + offset + nodes.length) % nodes.length;
+      selectNode(nodes[nextIdx].id);
+    }
+
+    // ── Toast Helper ──
+    function showToast(msg, isError = false) {
+      toastMsg.textContent = msg;
+      toast.classList.toggle("error", isError);
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3500);
+    }
+
+    // Boot
+    window.addEventListener("DOMContentLoaded", initStudio);
+  </script>
+</body>
+
+</html>
