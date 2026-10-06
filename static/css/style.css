@@ -346,7 +346,9 @@ html, body {
   bottom: 22px;
   right: 22px;
   z-index: 50;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
+  text-decoration: none;
   user-select: none;
   -webkit-user-select: none;
   display: flex;
@@ -361,7 +363,17 @@ html, body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.12);
   opacity: 1;
   text-align: left;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+#credits-badge:hover {
+  transform: translateY(-2px) scale(1.015);
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.72), 0 0 24px rgba(56, 189, 248, 0.28);
+}
+
+#credits-badge:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .credits-header {
@@ -389,6 +401,17 @@ html, body {
   color: #38bdf8;
 }
 
+.credits-external-icon {
+  margin-left: auto;
+  color: rgba(56, 189, 248, 0.6);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#credits-badge:hover .credits-external-icon {
+  color: #38bdf8;
+  transform: translate(1px, -1px);
+}
+
 .credits-name {
   font-size: 0.95rem;
   font-weight: 700;
@@ -396,6 +419,19 @@ html, body {
   letter-spacing: 0.01em;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.credits-linkedin-icon {
+  color: #0ea5e9;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#credits-badge:hover .credits-linkedin-icon {
+  color: #38bdf8;
+  transform: scale(1.15);
 }
 
 .credits-dept {
