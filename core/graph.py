@@ -237,6 +237,11 @@ def dijkstra(start: str, target: str) -> Optional[List[str]]:
     return path if path[0] == start else None
 
 
+def get_shortest_path(start: str, target: str) -> List[str]:
+    """Return ordered list of node IDs along shortest path from start to target."""
+    return dijkstra(start, target) or [start, target]
+
+
 def build_route(start: str, target: str, target_branch: Optional[str] = None, final_destination_id: Optional[str] = None) -> Dict[str, Any]:
     """Return full route dict with steps, floor-transition flags, etc."""
     from core.resolver import get_staircase_branch_yaw

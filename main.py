@@ -9,16 +9,17 @@ from pathlib import Path
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from core.config import BASE_DIR, STATIC_DIR, HOST, PORT, START_NODE
-from core.graph import NODES, SCENE_CALIBRATION, build_route
-from core.resolver import resolve, resolve_async
-from core.tts import synthesize, generate_tour_segments
+from core.graph import NODES, SCENE_CALIBRATION, build_route, get_shortest_path
+from core.resolver import resolve, resolve_async, resolve_entity_llm_or_local
+from core.tts import synthesize, generate_tour_segments, synthesize_speech_base64
+from core.stt import transcribe_audio_bytes
 
 app = FastAPI(title="Sakhi EEE Kiosk", version="2.0.0")
 
@@ -474,10 +475,131 @@ async def query_handler(body: QueryBody):
 
 
 @app.post("/api/voice_query")
-async def voice_query_endpoint(body: QueryBody):
-    """Triggered by voice_listener daemon; automatically broadcasts to connected kiosk screens."""
-    res = await execute_voice_query_and_broadcast(body.query, body.start)
-    return JSONResponse(res)
+async def handle_voice_upload(request: Request, audio: Optional[UploadFile] = File(None)):
+    """
+    Accepts raw recorded audio, transcribes it via Cloud Whisper (Groq/OpenAI),
+    resolves the campus entity via LLM / Fuzzy resolver, and returns the complete tour.
+    Also supports JSON query body for backwards compatibility.
+    """
+    ct = request.headers.get("content-type", "")
+
+    # 1. Backwards compatibility: handle raw JSON queries
+    if "application/json" in ct:
+        try:
+            body_dict = await request.json()
+            q = body_dict.get("query", "")
+            start = body_dict.get("start", START_NODE)
+            res = await execute_voice_query_and_broadcast(q, start)
+            return JSONResponse(res)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid JSON query payload: {e}")
+
+    # 2. Extract audio from multipart form upload
+    audio_file = audio
+    if not audio_file:
+        try:
+            form = await request.form()
+            candidate = form.get("audio")
+            if candidate and hasattr(candidate, "read"):
+                audio_file = candidate
+        except Exception:
+            pass
+
+    if not audio_file:
+        raise HTTPException(status_code=400, detail="No audio file provided in request.")
+
+    audio_data = await audio_file.read()
+    filename = getattr(audio_file, "filename", "voice.wav") or "voice.wav"
+
+    # 3. High-accuracy transcription with Cloud Whisper
+    try:
+        transcript = await transcribe_audio_bytes(audio_data, filename=filename)
+    except Exception as e:
+        print(f"[Whisper STT Error]: {e}")
+        return JSONResponse({
+            "status": "error",
+            "error": str(e),
+            "spoken_text": "Aawaz process karne me samasya aayi. Kripya punah prayas karein."
+        }, status_code=500)
+
+    if not transcript:
+        return JSONResponse({
+            "status": "unresolved",
+            "spoken_text": "Aapki aawaz theek se sunai nahi di. Kripya dobara boliye."
+        })
+
+    # 4. Resolve entity via LLM / Fuzzy Resolver
+    entity = await resolve_entity_llm_or_local(transcript)
+    if not entity:
+        msg = f"Aapne kaha '{transcript}', lekin main is jagah ko pehchan nahi paayi. Kripya Bosch Lab ya Lalit Sir ka naam lijiye."
+        audio_base64 = await synthesize_speech_base64(msg)
+        packet = {
+            "status": "unresolved",
+            "action": "not_found",
+            "transcript": transcript,
+            "spoken_text": msg,
+            "spoken_hinglish": msg,
+            "audio_base64": audio_base64
+        }
+        await broadcast_kiosk_command(packet)
+        return JSONResponse(packet)
+
+    # 4b. Persona Identity queries ("who are you", "tum kaun ho")
+    if entity.get("id") == "sakhi_persona":
+        spoken = entity.get("spoken_hinglish", "Main Sakhi hoon, aapki smart campus guide!")
+        audio_base64 = await synthesize_speech_base64(spoken)
+        packet = {
+            "status": "persona",
+            "action": "speak_only",
+            "transcript": transcript,
+            "display_title": entity.get("name", "Sakhi"),
+            "spoken_text": spoken,
+            "spoken_hinglish": spoken,
+            "audio_base64": audio_base64,
+            "entity": entity,
+            "tourSegments": [],
+            "tour_segments": []
+        }
+        await broadcast_kiosk_command(packet)
+        return JSONResponse(packet)
+
+    # 5. Generate route and tour segments
+    target_pano = entity.get("target_pano_id") or entity.get("linked_pano_id") or entity.get("pano_id")
+    if not target_pano or target_pano not in NODES:
+        target_pano = "01_main_entrance_floor1"
+    entity["target_pano_id"] = target_pano
+
+    route_nodes = get_shortest_path(START_NODE, target_pano)
+    tour_segments = await generate_tour_segments(entity, route_nodes)
+
+    final_dest_id = entity.get("id") or target_pano
+    target_branch = entity.get("target_branch")
+    route = build_route(START_NODE, target_pano, target_branch=target_branch, final_destination_id=final_dest_id)
+    display_title = entity.get("name", transcript)
+    spoken_hinglish = entity.get("spoken_hinglish", display_title)
+    audio_base64 = tour_segments[0]["audio_base64"] if tour_segments else await synthesize_speech_base64(spoken_hinglish)
+
+    packet = {
+        "status": "success",
+        "action": "start_tour",
+        "transcript": transcript,
+        "entity": entity,
+        "tourSegments": tour_segments,
+        "tour_segments": tour_segments,
+        "route": route,
+        "display_title": display_title,
+        "spoken_hinglish": spoken_hinglish,
+        "audio_base64": audio_base64,
+        "target_pano_id": target_pano,
+        "target_branch": target_branch,
+        "final_destination_id": final_dest_id,
+        "destination_entity": entity
+    }
+
+    # Broadcast to connected kiosk screens
+    await broadcast_kiosk_command(packet)
+    return JSONResponse(packet)
+
 
 
 @app.post("/api/kiosk/broadcast")

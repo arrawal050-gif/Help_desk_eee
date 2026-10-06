@@ -517,3 +517,7 @@ async def resolve_async(query: str) -> Optional[Dict[str, Any]]:
 def resolve(query: str) -> Optional[Dict[str, Any]]:
     """Synchronous resolver (uses local phonetic/fuzzy engine)."""
     return local_fallback_resolve(query)
+
+
+# Alias for explicit LLM + local resolver pipeline
+resolve_entity_llm_or_local = resolve_async

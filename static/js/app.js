@@ -228,6 +228,191 @@ function handleKioskCommand(data) {
   }
 }
 
+// ── Frontend Audio Recorder (MediaRecorder -> Cloud Whisper) ──────────────────
+let mediaRecorder = null;
+let audioChunks = [];
+let _isRecording = false;
+
+export function showKioskStatus(text) {
+  showVoiceStatus("listening", text);
+}
+
+export function playDirectAudio(base64Audio) {
+  if (!base64Audio) return;
+  if (typeof window.playAudio === "function") {
+    window.playAudio(base64Audio);
+    return;
+  }
+  try {
+    const src = base64Audio.startsWith("data:") ? base64Audio : `data:audio/mp3;base64,${base64Audio}`;
+    const snd = new Audio(src);
+    snd.play().catch(e => console.warn("[playDirectAudio]", e));
+  } catch (err) {
+    console.warn("[playDirectAudio Error]", err);
+  }
+}
+
+export async function startVoiceRecording() {
+  if (_isRecording) {
+    console.log("[VoiceRecorder] Recording already in progress.");
+    return;
+  }
+
+  const $micBtn = document.getElementById("mic-btn");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // Choose optimal container format
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm'
+        : (MediaRecorder.isTypeSupported('audio/wav') ? 'audio/wav' : ''));
+
+    mediaRecorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream);
+
+    audioChunks = [];
+    _isRecording = true;
+
+    if ($micBtn) $micBtn.classList.add("listening");
+    playChimeSound();
+    showKioskStatus("Listening\u2026 (Speak now)");
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      _isRecording = false;
+      if ($micBtn) $micBtn.classList.remove("listening");
+      showKioskStatus("Sakhi sun rahi hai\u2026");
+
+      const recType = mediaRecorder.mimeType || 'audio/webm';
+      const audioBlob = new Blob(audioChunks, { type: recType });
+      const ext = recType.includes('webm') ? 'mic.webm' : 'mic.wav';
+      const formData = new FormData();
+      formData.append('audio', audioBlob, ext);
+
+      console.log(`[VoiceRecorder] Sending ${(audioBlob.size / 1024).toFixed(1)} KB audio to Cloud Whisper\u2026`);
+
+      try {
+        const res = await fetch('/api/voice_query', { method: 'POST', body: formData });
+        const data = await res.json();
+        console.log("[Voice Response]", data);
+
+        if (data.status === "success" && (data.tourSegments || data.tour_segments)) {
+          const segments = data.tourSegments || data.tour_segments;
+          showVoiceStatus("speaking", data.display_title || data.entity?.name || "Destination");
+          if (typeof window.playSynchronizedTour === "function") {
+            window.playSynchronizedTour(segments, data.route, data.display_title, data.entity);
+          }
+        } else if (data.status === "persona" && data.audio_base64) {
+          showVoiceStatus("speaking", data.spoken_text || data.spoken_hinglish || "Sakhi");
+          playDirectAudio(data.audio_base64);
+        } else if (data.spoken_text && data.audio_base64) {
+          showVoiceStatus("speaking", data.spoken_text);
+          playDirectAudio(data.audio_base64);
+        } else if (data.spoken_text) {
+          showVoiceStatus("speaking", data.spoken_text);
+        }
+      } catch (err) {
+        console.error("[VoiceRecorder] Query upload failed:", err);
+        showVoiceStatus("idle", "");
+      }
+    };
+
+    // ── VAD: Dynamic Voice Activity Detection ─────────────────────────────────
+    // • Polls RMS amplitude every ~33 ms via Web Audio AnalyserNode.
+    // • Speech active  → reset silence counter, keep recording.
+    // • Silence ≥ 2 s after speech heard → finalise & upload.
+    // • Hard cap 8 s  → always terminates even if VAD stalls.
+    // • Grace 400 ms  → ignores brief natural pauses (breath between words).
+    const VAD_SILENCE_MS = 2000;   // ms of quiet that triggers stop
+    const VAD_MAX_MS     = 8000;   // absolute maximum recording length
+    const VAD_INTERVAL   = 33;     // poll every ~33 ms (≈30 fps)
+    const VAD_THRESHOLD  = 0.012;  // normalised RMS below which = silence
+    const VAD_GRACE_MS   = 400;    // ignore pauses shorter than this
+
+    let vadCtx, analyser, vadBuffer;
+    let silenceStart = null;   // timestamp silence began; null = speech active
+    let hasSpeech    = false;  // true once we detect at least one speech frame
+    let vadInterval, maxTimer;
+
+    // Unified stop helper – cleans up VAD resources then stops MediaRecorder
+    const _stopRecording = (reason) => {
+      clearInterval(vadInterval);
+      clearTimeout(maxTimer);
+      if (vadCtx) { try { vadCtx.close(); } catch (_) {} }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        console.log(`[VAD] Stopping: ${reason}`);
+        mediaRecorder.stop();
+        stream.getTracks().forEach(t => t.stop());
+      }
+    };
+
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      vadCtx   = new AudioCtx();
+      analyser = vadCtx.createAnalyser();
+      analyser.fftSize = 512;
+      vadBuffer = new Float32Array(analyser.fftSize);
+      vadCtx.createMediaStreamSource(stream).connect(analyser);
+
+      vadInterval = setInterval(() => {
+        if (!mediaRecorder || mediaRecorder.state !== "recording") {
+          clearInterval(vadInterval);
+          return;
+        }
+
+        analyser.getFloatTimeDomainData(vadBuffer);
+        let sum = 0;
+        for (let i = 0; i < vadBuffer.length; i++) sum += vadBuffer[i] * vadBuffer[i];
+        const rms = Math.sqrt(sum / vadBuffer.length);
+
+        if (rms > VAD_THRESHOLD) {
+          // ── Active speech frame ──────────────────────────────────────────────
+          hasSpeech    = true;
+          silenceStart = null;   // reset silence counter
+          showKioskStatus("Bol rahe ho\u2026 (recording)");
+        } else {
+          // ── Silence frame ────────────────────────────────────────────────────
+          if (!hasSpeech) return;  // pre-speech silence: keep waiting
+
+          if (silenceStart === null) silenceStart = Date.now();
+          const silenceMs = Date.now() - silenceStart;
+
+          if (silenceMs < VAD_GRACE_MS) {
+            // Brief breath gap – don't update HUD to avoid flicker
+          } else if (silenceMs < VAD_SILENCE_MS) {
+            const remaining = Math.ceil((VAD_SILENCE_MS - silenceMs) / 1000);
+            showKioskStatus(`Kuch aur bolein? (${remaining}s)\u2026`);
+          } else {
+            _stopRecording(`${silenceMs}ms silence after speech`);
+          }
+        }
+      }, VAD_INTERVAL);
+
+    } catch (vadErr) {
+      // AnalyserNode unavailable (restricted context) – fall back to 5 s fixed timer
+      console.warn("[VAD] AnalyserNode setup failed, using 5 s fallback:", vadErr);
+      setTimeout(() => _stopRecording("5 s fallback"), 5000);
+    }
+
+    // Hard safety cap – fires regardless of VAD outcome
+    maxTimer = setTimeout(() => _stopRecording("8 s hard cap"), VAD_MAX_MS);
+
+    // Start buffering in 100 ms chunks (gives VAD fine-grained data)
+    mediaRecorder.start(100);
+
+  } catch (err) {
+    _isRecording = false;
+    if ($micBtn) $micBtn.classList.remove("listening");
+    console.error("[VoiceRecorder] Microphone access error:", err);
+    alert("Microphone access error. Check browser mic permissions.");
+  }
+}
+
 // ── Startup & Initialization ──────────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
   initScreenWakeLock();
@@ -236,7 +421,15 @@ window.addEventListener("DOMContentLoaded", () => {
   // Expose helpers globally
   window.sakhiKiosk = {
     showVoiceStatus,
+    showKioskStatus,
     playChimeSound,
+    playDirectAudio,
+    startVoiceRecording,
     reconnect: connectKioskWebSocket,
   };
+
+  window.startVoiceRecording = startVoiceRecording;
+  window.showKioskStatus = showKioskStatus;
+  window.playDirectAudio = playDirectAudio;
 });
+

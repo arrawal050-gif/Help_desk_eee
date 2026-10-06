@@ -121,36 +121,21 @@ function _buildWakeRecognition() {
         }
 
         if (_containsWakeWord(text)) {
-          const queryPart = _extractQuery(text);
+          console.log("[WakeWord] 'Sakhi' wake word detected! Triggering Cloud Whisper voice recording...");
+          _awaitingQuery = false;
+          clearTimeout(_awaitTimer); _awaitTimer = null;
+          
+          // Stop wake listener while capturing 3.5s high-fidelity audio buffer
+          _wakeEnabled = false;
+          try { r.stop(); } catch (_) {}
 
-          if (queryPart && queryPart.length > 2) {
-            // One-breath: "Sakhi, Lab kahan hai?"
-            if (!final) continue; // wait for final result
-            console.log(`[WakeWord] One-breath: "${queryPart}"`);
-            _awaitingQuery = false;
-            clearTimeout(_awaitTimer); _awaitTimer = null;
-            _playChime();
-            _showHUD("Sakhi sun rahi hai...");
-            setTimeout(() => {
-              _showHUD("");
-              // Send verbatim transcript directly to backend to allow LLM full natural sentence context
-              if (_onResult) _onResult(text.trim());
-            }, 400);
-            return;
-          } else if (!_awaitingQuery) {
-            // Bare "Sakhi" – wait for destination
-            console.log("[WakeWord] Bare wake word – waiting for destination...");
-            _awaitingQuery = true;
-            _playChime();
-            _showHUD("Sakhi sun rahi hai... bataiye kahan jaana hai?");
-            clearTimeout(_awaitTimer);
-            _awaitTimer = setTimeout(() => {
-              console.log("[WakeWord] Query window timed out.");
-              _awaitingQuery = false;
-              _showHUD("");
-            }, 7000);
-            return;
+          if (typeof window.startVoiceRecording === "function") {
+            window.startVoiceRecording().finally(() => {
+              _wakeEnabled = true;
+              setTimeout(_startWakeListener, 1200);
+            });
           }
+          return;
         }
       }
     }
@@ -235,6 +220,19 @@ export function initSpeech(onResult) {
  * Mic button – one-shot manual listen (no wake word needed).
  */
 export function toggleMic() {
+  if (typeof window.startVoiceRecording === "function") {
+    // Pause wake listener while recording
+    if (_wakeActive && _wakeRecognition) {
+      _wakeEnabled = false;
+      try { _wakeRecognition.stop(); } catch(_) {}
+    }
+    window.startVoiceRecording().finally(() => {
+      _wakeEnabled = true;
+      setTimeout(_startWakeListener, 800);
+    });
+    return;
+  }
+
   if (!SpeechRecognition) return;
 
   if (_isListening) {
