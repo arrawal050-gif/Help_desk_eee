@@ -102,23 +102,35 @@ def get_staircase_branch_yaw(stair_node_id: str, final_destination_id: Optional[
             "branch": branch_key
         }
 
+    # --- Detect washroom destination ---
+    is_wr = (
+        is_washroom
+        or "washroom" in dest
+        or "toilet" in dest
+        or "restroom" in dest
+        or dest.startswith("wr_")
+        or "wr" in dest.split("_")
+    )
+
     # --- GROUND FLOOR STAIR FOOT (06_stairs_floor1) ---
     if stair_node_id == "06_stairs_floor1":
-        if (is_washroom or "washroom" in dest or "toilet" in dest) and not ("girls" in dest or "1f" in dest or "2f" in dest):
+        if is_wr and not ("girls" in dest or "1f" in dest or "2f" in dest or "second" in dest):
             return _branch_res("to_washroom", 233.6, -1.1)
         return _branch_res("to_stairs", 170.0, 10.0)
 
     # --- 1ST FLOOR LANDING (07_stairs_floor2) ---
     if stair_node_id == "07_stairs_floor2":
-        if (is_washroom or "washroom" in dest or "toilet" in dest) and ("girls" in dest or "1f" in dest or "floor1" in dest or "wr_girls" in dest):
+        if is_wr and ("girls" in dest or "1f" in dest or "floor1" in dest or "wr_girls" in dest):
             return _branch_res("to_washroom", 154.3, -4.1)
+        if is_wr and ("2f" in dest or "second" in dest or "boys_2f" in dest):
+            return _branch_res("to_stairs", 7.6, -2.4)
         if any(k in dest for k in ["mitsubishi", "17_", "lab9", "lab_09", "09_", "08_", "lab5", "lab6", "lab7", "lab8", "207", "208", "209", "210", "floor1", "first floor", "1f", "corridor"]):
             return _branch_res("to_corridor", 89.9, -8.0)
         return _branch_res("to_stairs", 7.6, -2.4)
 
     # --- 2ND FLOOR LANDING (10_stairs_floor3) ---
     if stair_node_id == "10_stairs_floor3":
-        if is_washroom or "washroom" in dest or "toilet" in dest:
+        if is_wr or "washroom" in dest or "toilet" in dest:
             return _branch_res("to_washroom", 153.6, -6.4)
         if "bosch" in dest or "11_" in dest:
             return _branch_res("to_bosch", 212.4, -0.8)
