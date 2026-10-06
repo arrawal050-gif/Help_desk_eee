@@ -114,6 +114,21 @@
     </div>
   </a>
 
+  <script>
+    (function() {
+      const badge = document.getElementById("credits-badge");
+      if (!badge) return;
+      const linkedinUrl = "https://www.linkedin.com/in/anujrawal-ar";
+      // Isolate touch and pointer events from the 360 viewer canvas behind it
+      badge.addEventListener("pointerdown", (e) => e.stopPropagation());
+      badge.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: true });
+      badge.addEventListener("mousedown", (e) => e.stopPropagation());
+      badge.addEventListener("click", function(e) {
+        e.stopPropagation();
+      });
+    })();
+  </script>
+
   <!-- ── Boot (all local, no CDN) ── -->
   <script type="module">
     import { initViewer, loadPano, SCENE_CALIBRATION, getCalibratedHeading } from "/static/js/viewer.js?v=5.0";
