@@ -17,9 +17,9 @@
     {"id":"fac_visiting","name":"Visiting Faculty Cabin 201","aliases":["cabin 201","visiting faculty","guest room"],"floor":2,"pano_id":"12_corridor_floor3","spoken_hinglish":"Visiting faculty cabin 201 Second Floor south wing me hai."}
   ],
   "laboratories": [
-    {"id":"lab_mitsubishi","name":"Mitsubishi & PLC Automation Lab","aliases":["mitsubishi lab","plc lab","scada lab","automation lab","mitsubishi center","lalit sir ka lab"],"floor":1,"pano_id":"17_Mitsubishi_Lab","spoken_hinglish":"Mitsubishi aur PLC Automation Center of Excellence First Floor par hai. Screen par path follow kijiye."},
-    {"id":"lab_bosch","name":"Bosch Automotive & Embedded Systems Lab","aliases":["bosch lab","bosh lab","automotive lab","embedded lab","embedded systems"],"floor":2,"pano_id":"11_Bosch_lab","spoken_hinglish":"Bosch Automotive Lab second floor par hai, stairs ke theek samne. Route load kar rahi hoon."},
-    {"id":"lab_eyantra","name":"e-Yantra / Robotics & VLSI Lab","aliases":["eyantra lab","vlsi lab","robotics lab","e yantra","robots lab","robotics"],"floor":2,"pano_id":"15_Robotics_Lab","spoken_hinglish":"e-Yantra aur VLSI Robotics Lab Second Floor ke southwest end par hai. Tour path follow kijiye."},
+    {"id":"lab_mitsubishi","name":"Mitsubishi & PLC Automation Lab","aliases":["mitsubishi lab","mitsubisi lab","mitsubhishi lab","mitsubishi","mitsubisi","plc lab","scada lab","automation lab","mitsubishi center","lalit sir ka lab","plc automation","industrial automation","factory automation"],"floor":1,"pano_id":"17_Mitsubishi_Lab","spoken_hinglish":"Mitsubishi aur PLC Automation Center of Excellence First Floor par hai. Screen par path follow kijiye."},
+    {"id":"lab_bosch","name":"Bosch Automotive & Embedded Systems Lab","aliases":["bosch lab","bosch","bosh lab","bosh","bose lab","bose","boss lab","boss","wash lab","watch lab","posh lab","baush lab","baush","bausch lab","bausch","booch lab","booch","bush lab","automotive lab","embedded lab","embedded systems","embedded systems lab","automotive embedded","car lab"],"floor":2,"pano_id":"11_Bosch_lab","target_branch":"to_bosch","spoken_hinglish":"Bosch Automotive Lab Second Floor par hai, stairs ke theek samne. Route load kar rahi hoon."},
+    {"id":"lab_eyantra","name":"e-Yantra / Robotics & VLSI Lab","aliases":["eyantra lab","eyantra","e yantra lab","e yantra","yantra lab","yantra","vlsi lab","vlsi","robotics lab","robotics","robots lab","robot lab","robots","yantra robotics","iit lab","iit bombay lab","drone lab","autonomous lab"],"floor":2,"pano_id":"15_Robotics_Lab","spoken_hinglish":"e-Yantra aur VLSI Robotics Lab Second Floor ke southwest end par hai. Tour path follow kijiye."},
     {"id":"lab_01","name":"Lab 1","aliases":["lab 1","lab one","electronics lab 1","first lab","lab1"],"floor":0,"pano_id":"02_lab1","spoken_hinglish":"Lab 1 Ground Floor par, main foyer me ghuste hi left side par hai."},
     {"id":"lab_02","name":"Lab 2","aliases":["lab 2","lab two","hardware lab","practical lab","lab2"],"floor":0,"pano_id":"03_lab2","spoken_hinglish":"Lab 2 Ground Floor par entrance foyer ke right side me hai."},
     {"id":"lab_03","name":"Lab 3","aliases":["lab 3","lab three","systems lab","software lab","lab3"],"floor":0,"pano_id":"04_lab3","spoken_hinglish":"Lab 3 Ground Floor corridor ke west side me hai."},
@@ -48,32 +48,46 @@
     {
       "id": "wr_boys_gf",
       "name": "Boys Washroom (Ground Floor)",
-      "aliases": ["boys washroom", "boys toilet", "washroom", "toilet", "restroom", "gents washroom", "gents toilet", "men toilet", "वॉशरूम", "टॉयलेट"],
+      "aliases": [
+        "boys washroom", "boys toilet", "washroom", "toilet", "restroom",
+        "gents washroom", "gents toilet", "men toilet", "mens toilet",
+        "bathroom", "wash room", "bath room", "gents",
+        "वॉशरूम", "टॉयलेट", "शौचालय"
+      ],
       "floor": 0,
       "pano_id": "06_stairs_floor1",
       "linked_pano_id": "06_stairs_floor1",
       "target_branch": "to_washroom",
-      "spoken_hinglish": "Ground floor par boys washroom stairs ke theek paas hai. Screen par direction dekhiye."
+      "spoken_hinglish": "Ground Floor par boys washroom stairs ke theek paas hai. Screen par direction dekhiye."
     },
     {
       "id": "wr_girls_1f",
       "name": "Girls Washroom (First Floor)",
-      "aliases": ["girls washroom", "girls toilet", "ladies washroom", "female toilet", "ladies toilet", "women toilet", "गर्ल्स वॉशरूम", "महिला वॉशरूम"],
+      "aliases": [
+        "girls washroom", "girls toilet", "ladies washroom", "ladies toilet",
+        "female toilet", "women toilet", "womens toilet", "girl toilet",
+        "first floor washroom", "1st floor washroom", "1f washroom",
+        "गर्ल्स वॉशरूम", "महिला वॉशरूम"
+      ],
       "floor": 1,
       "pano_id": "07_stairs_floor2",
       "linked_pano_id": "07_stairs_floor2",
       "target_branch": "to_washroom",
-      "spoken_hinglish": "First floor par girls washroom landing ke bagal mein hai. Rasta follow kijiye."
+      "spoken_hinglish": "First Floor par girls washroom landing ke bagal mein hai. Rasta follow kijiye."
     },
     {
       "id": "wr_boys_2f",
       "name": "Boys Washroom (Second Floor)",
-      "aliases": ["second floor washroom", "2nd floor toilet", "boys washroom second floor", "second floor boys toilet"],
+      "aliases": [
+        "second floor washroom", "2nd floor toilet", "2nd floor washroom",
+        "boys washroom second floor", "second floor boys toilet",
+        "floor 2 washroom", "second washroom"
+      ],
       "floor": 2,
       "pano_id": "10_stairs_floor3",
       "linked_pano_id": "10_stairs_floor3",
       "target_branch": "to_washroom",
-      "spoken_hinglish": "Second floor par boys washroom left wing mein stairs ke paas hai."
+      "spoken_hinglish": "Second Floor par boys washroom left wing mein stairs ke paas hai."
     }
   ]
 }

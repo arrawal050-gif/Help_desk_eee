@@ -127,13 +127,64 @@ def get_staircase_branch_yaw(stair_node_id: str, final_destination_id: Optional[
     return None
 
 
+# ── Stop words stripped before fuzzy matching ─────────────────────────────────
+_STOP_WORDS = frozenset([
+    "sakhi", "sakhee", "saakhi", "saki",
+    "kahan", "kidhar", "jana", "jaana", "chahiye",
+    "mujhe", "mujhko", "hame", "batao", "bata", "dikhao",
+    "where", "is", "the", "a", "an", "to", "of",
+    "show", "take", "go", "find", "hai", "he", "ka", "ki", "ke",
+    "please", "kya", "aur",
+])
+
+
+def _normalize_for_fuzzy(text: str) -> str:
+    """Strip stop-words & punctuation for cleaner fuzzy token comparison."""
+    t = _norm(text)
+    tokens = [w for w in t.split() if w not in _STOP_WORDS]
+    return " ".join(tokens)
+
+
+def _fuzzy_best(query_clean: str) -> Optional[tuple]:
+    """
+    Compare query tokens against all alias tokens using difflib ratio.
+    Returns (score, entry) for best match above THRESHOLD, or None.
+    THRESHOLD 0.82 catches: 'bosh'→'bosch', 'mitsubisi'→'mitsubishi', etc.
+    """
+    import difflib
+    THRESHOLD = 0.82
+    q_tokens = [w for w in query_clean.split() if len(w) > 2]
+    if not q_tokens:
+        return None
+
+    best_score, best_entry = 0.0, None
+
+    for entry in _INDEX:
+        for alias in entry["aliases_norm"]:
+            alias_tokens = alias.split()
+            for qt in q_tokens:
+                for at in alias_tokens:
+                    if len(at) < 3:
+                        continue
+                    ratio = difflib.SequenceMatcher(None, qt, at).ratio()
+                    if ratio > best_score:
+                        best_score = ratio
+                        best_entry = entry
+
+    if best_score >= THRESHOLD and best_entry:
+        return (best_score, best_entry)
+    return None
+
+
 def resolve(query: str) -> Optional[Dict[str, Any]]:
     """
     Return matched entity dict or None.
     Strategy:
-      0. Direct Graph Vertex ID map check
-      1. Exact / substring alias match  (weighted by match length)
-      2. Token-overlap fallback
+      -1. Persona identity query check
+       0. Direct Graph Vertex ID map check
+       1. Exact / substring / containment alias match (weighted by length)
+       2. Fuzzy phonetic token match via difflib (catches ASR mistranscriptions)
+       3. Stop-word-filtered token overlap fallback
     """
     raw_q = query.strip().lower()
 
@@ -150,10 +201,9 @@ def resolve(query: str) -> Optional[Dict[str, Any]]:
             "description": "Main A.R. Labs dwara viksit ek smart AI campus guide aur dost hoon."
         }
 
-    # Pass 0: Graph Vertex Map
+    # Pass 0: Graph Vertex Map direct lookup
     if raw_q in GRAPH_VERTEX_MAP:
         mapping = GRAPH_VERTEX_MAP[raw_q]
-        # Find matching entity in _INDEX
         for entry in _INDEX:
             it = entry["item"]
             if it.get("id") == mapping.get("target_id") or it.get("pano_id") == mapping.get("pano_id"):
@@ -165,7 +215,7 @@ def resolve(query: str) -> Optional[Dict[str, Any]]:
     q = _norm(query)
     best_score, best = 0, None
 
-    # Pass 1: exact match / substring / containment
+    # Pass 1: Exact / substring / containment match
     for entry in _INDEX:
         for alias in entry["aliases_norm"]:
             if q == alias:
@@ -192,13 +242,28 @@ def resolve(query: str) -> Optional[Dict[str, Any]]:
         if score > best_score:
             best_score, best = score, entry
 
-    # Pass 2: token overlap
-    if not best:
-        q_tok = set(q.split())
+    if best:
+        return best["item"]
+
+    # Pass 2: Fuzzy phonetic token matching (handles ASR mistranscriptions)
+    # e.g. "bosh lab" → "bosch lab", "mitsubisi" → "mitsubishi"
+    q_fuzzy = _normalize_for_fuzzy(query)
+    fuzzy_result = _fuzzy_best(q_fuzzy)
+    if fuzzy_result:
+        _score, fuzzy_entry = fuzzy_result
+        print(f"[Resolver Fuzzy] '{query}' → '{fuzzy_entry['item']['name']}' (ratio={_score:.2f})")
+        return fuzzy_entry["item"]
+
+    # Pass 3: Stop-word-filtered token overlap fallback
+    q_tok = set(q_fuzzy.split())
+    if q_tok:
+        overlap_score, overlap_best = 0, None
         for entry in _INDEX:
             for alias in entry["aliases_norm"]:
                 overlap = len(q_tok & set(alias.split()))
-                if overlap > best_score:
-                    best_score, best = overlap, entry
+                if overlap > overlap_score:
+                    overlap_score, overlap_best = overlap, entry
+        if overlap_best:
+            return overlap_best["item"]
 
-    return best["item"] if best else None
+    return None

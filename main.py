@@ -291,18 +291,55 @@ async def execute_voice_query_and_broadcast(query: str, start: Optional[str] = S
     start_node = start if start in NODES else START_NODE
     entity = resolve(query)
 
-    if entity:
-        target = entity.get("linked_pano_id") or entity.get("pano_id")
-        spoken = entity.get("spoken_hinglish", entity["name"])
-        display = entity["name"]
-        matched = True
-        target_branch = entity.get("target_branch")
-    else:
-        target = "01_main_entrance_floor1"
-        spoken = "Aapka destination clarify nahi hua. Main entrance foyer dikha rahi hoon."
-        display = "Main Building Foyer"
-        matched = False
-        target_branch = None
+    # 1. Unresolved query: Do NOT silently route to entrance foyer. Return helpful clarification prompt.
+    if not entity:
+        spoken = "Sakhi ko samajh nahi aaya. Kripya lab, room number ya teacher ka naam dobara boliye."
+        audio = await synthesize(spoken)
+        packet = {
+            "action": "not_found",
+            "query": query,
+            "matched": False,
+            "display_title": "Destination Not Found",
+            "spoken_hinglish": spoken,
+            "audio_base64": audio,
+            "tour_segments": [],
+            "tourSegments": [],
+            "target_pano_id": None,
+            "target_branch": None,
+            "final_destination_id": None,
+            "destination_entity": None,
+            "route": None,
+        }
+        await broadcast_kiosk_command(packet)
+        return packet
+
+    # 2. Persona identity query: speak answer without navigation tour
+    if entity.get("id") == "sakhi_persona":
+        spoken = entity.get("spoken_hinglish", "Main Sakhi hoon, aapki smart campus guide!")
+        audio = await synthesize(spoken)
+        packet = {
+            "action": "speak_only",
+            "query": query,
+            "matched": True,
+            "display_title": entity.get("name", "Sakhi"),
+            "spoken_hinglish": spoken,
+            "audio_base64": audio,
+            "tour_segments": [],
+            "tourSegments": [],
+            "target_pano_id": None,
+            "target_branch": None,
+            "final_destination_id": "sakhi_persona",
+            "destination_entity": entity,
+            "route": None,
+        }
+        await broadcast_kiosk_command(packet)
+        return packet
+
+    # 3. Valid Campus Destination: Generate route & multi-phase tour
+    target = entity.get("linked_pano_id") or entity.get("pano_id")
+    spoken = entity.get("spoken_hinglish", entity["name"])
+    display = entity["name"]
+    target_branch = entity.get("target_branch")
 
     if target not in NODES:
         target = "01_main_entrance_floor1"
@@ -310,7 +347,7 @@ async def execute_voice_query_and_broadcast(query: str, start: Optional[str] = S
     final_dest_id = entity.get("id") if entity else target
     route = build_route(start_node, target, target_branch=target_branch, final_destination_id=final_dest_id)
 
-    tour_entity = dict(entity) if entity else {"name": display, "floor": 0}
+    tour_entity = dict(entity)
     tour_entity["target_pano_id"] = target
 
     tour_segments = await generate_tour_segments(tour_entity, route.get("path", [start_node, target]))
@@ -319,7 +356,7 @@ async def execute_voice_query_and_broadcast(query: str, start: Optional[str] = S
     packet = {
         "action": "start_tour",
         "query": query,
-        "matched": matched,
+        "matched": True,
         "display_title": display,
         "spoken_hinglish": spoken,
         "audio_base64": audio,
@@ -349,18 +386,57 @@ async def query_handler(body: QueryBody):
     start = body.start if body.start in NODES else START_NODE
     entity = resolve(body.query)
 
-    if entity:
-        target = entity.get("linked_pano_id") or entity.get("pano_id")
-        spoken = entity.get("spoken_hinglish", entity["name"])
-        display = entity["name"]
-        matched = True
-        target_branch = entity.get("target_branch")
-    else:
-        target = "01_main_entrance_floor1"
-        spoken = "Aapka destination clarify nahi hua. Main entrance foyer dikha rahi hoon."
-        display = "Main Building Foyer"
-        matched = False
-        target_branch = None
+    # 1. Unresolved query
+    if not entity:
+        spoken = "Sakhi ko samajh nahi aaya. Kripya lab, room number ya teacher ka naam dobara boliye."
+        audio = await synthesize(spoken)
+        res = {
+            "action": "not_found",
+            "query": body.query,
+            "matched": False,
+            "display_title": "Destination Not Found",
+            "spoken_hinglish": spoken,
+            "audio_base64": audio,
+            "tour_segments": [],
+            "tourSegments": [],
+            "target_pano_id": None,
+            "target_branch": None,
+            "final_destination_id": None,
+            "destination_entity": None,
+            "route": None,
+        }
+        if body.broadcast:
+            await broadcast_kiosk_command(res)
+        return JSONResponse(res)
+
+    # 2. Persona identity query
+    if entity.get("id") == "sakhi_persona":
+        spoken = entity.get("spoken_hinglish", "Main Sakhi hoon, aapki smart campus guide!")
+        audio = await synthesize(spoken)
+        res = {
+            "action": "speak_only",
+            "query": body.query,
+            "matched": True,
+            "display_title": entity.get("name", "Sakhi"),
+            "spoken_hinglish": spoken,
+            "audio_base64": audio,
+            "tour_segments": [],
+            "tourSegments": [],
+            "target_pano_id": None,
+            "target_branch": None,
+            "final_destination_id": "sakhi_persona",
+            "destination_entity": entity,
+            "route": None,
+        }
+        if body.broadcast:
+            await broadcast_kiosk_command(res)
+        return JSONResponse(res)
+
+    # 3. Valid Campus Destination
+    target = entity.get("linked_pano_id") or entity.get("pano_id")
+    spoken = entity.get("spoken_hinglish", entity["name"])
+    display = entity["name"]
+    target_branch = entity.get("target_branch")
 
     if target not in NODES:
         target = "01_main_entrance_floor1"
@@ -369,7 +445,7 @@ async def query_handler(body: QueryBody):
     route = build_route(start, target, target_branch=target_branch, final_destination_id=final_dest_id)
 
     # Generate synchronized multi-phase tour segments
-    tour_entity = dict(entity) if entity else {"name": display, "floor": 0}
+    tour_entity = dict(entity)
     tour_entity["target_pano_id"] = target
 
     tour_segments = await generate_tour_segments(tour_entity, route.get("path", [start, target]))
@@ -377,7 +453,8 @@ async def query_handler(body: QueryBody):
 
     res = {
         "action": "start_tour",
-        "matched": matched,
+        "query": body.query,
+        "matched": True,
         "display_title": display,
         "spoken_hinglish": spoken,
         "audio_base64": audio,

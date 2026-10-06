@@ -191,6 +191,21 @@ function handleKioskCommand(data) {
       break;
     }
 
+    case "speak_only":
+    case "not_found": {
+      const promptText = data.spoken_hinglish || data.display_title || "Sakhi";
+      showVoiceStatus("speaking", promptText);
+
+      if (data.audio_base64 && typeof window.playAudio === "function") {
+        window.playAudio(data.audio_base64);
+      }
+
+      setTimeout(() => {
+        showVoiceStatus("idle", "");
+      }, 6000);
+      break;
+    }
+
     case "status": {
       showVoiceStatus(data.status, data.text);
       if (data.status === "listening") {

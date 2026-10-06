@@ -111,6 +111,24 @@ async function submitQuery(query) {
     return;
   }
 
+  if (!data.matched || data.action === "not_found") {
+    setStepLabel(data.spoken_hinglish || "Destination samajh nahi aaya. Kripya dobara boliye.", true);
+    if (data.audio_base64 && typeof playAudio === "function") {
+      playAudio(data.audio_base64);
+    }
+    setTimeout(() => setStepLabel("", false), 5000);
+    return;
+  }
+
+  if (data.action === "speak_only") {
+    setStepLabel(data.spoken_hinglish || data.display_title || "Sakhi", false);
+    if (data.audio_base64 && typeof playAudio === "function") {
+      playAudio(data.audio_base64);
+    }
+    setTimeout(() => setStepLabel("", false), 6000);
+    return;
+  }
+
   const steps = data.route?.steps || [];
   if (!steps.length) {
     setStepLabel("No route found.", true);

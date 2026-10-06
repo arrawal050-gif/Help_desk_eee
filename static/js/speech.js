@@ -324,3 +324,7 @@ export async function playAudio(base64mp3) {
   }
 }
 
+if (typeof window !== "undefined") {
+  window.playAudio = playAudio;
+}
+
