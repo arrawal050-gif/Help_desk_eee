@@ -156,7 +156,42 @@ _STOP_WORDS = frozenset([
     "where", "is", "the", "a", "an", "to", "of",
     "show", "take", "go", "find", "hai", "he", "ka", "ki", "ke",
     "please", "kya", "aur",
+    # Hindi Devanagari stop words
+    "कहा", "कहाँ", "किधर", "जाना", "चाहिए",
+    "मुझे", "मुझको", "हमे", "हमें", "बताओ", "बता", "दिखाओ",
+    "है", "हे", "हैं", "का", "की", "के", "को", "से", "में", "पर",
+    "प्लीज", "क्या", "और", "सखी"
 ])
+
+# ── Hindi Devanagari Phonetic & Keyword Transliteration Map ───────────────────
+HINDI_KEYWORD_MAP = {
+    # Faculty
+    "ललित": "lalit", "भंवरिला": "bhawnrela", "नरेश": "naresh", "पुरोहित": "purohit",
+    "श्वेता": "shweta", "देशमुख": "deshmukh", "प्रीत": "preet", "जैन": "jain",
+    "सोनी": "soni", "अनिल": "anil", "तोशी": "toshi", "मंडलोई": "mandloi",
+    "दीपक": "deepak", "राठौर": "rathod", "राठोड": "rathod", "अलका": "alka",
+    "यामिनी": "yamini", "मकसरे": "makasare", "अंजली": "anjli", "गुप्ता": "gupta",
+    "दिलीप": "dilip", "नीलेश": "nilesh", "पाटीदार": "patidar",
+    # Labs & Facilities
+    "बॉश": "bosch", "बौश": "bosch", "मित्सुबिशी": "mitsubishi", "मित्सुबिशि": "mitsubishi",
+    "रोबोटिक्स": "robotics", "रोबोट": "robotics", "यंत्र": "eyantra", "ईयंत्र": "eyantra",
+    "वीएलएसआई": "vlsi", "ऑटोमेशन": "automation", "कैबिन": "cabin", "केबिन": "cabin",
+    "लैब": "lab", "लेब": "lab", "प्रयोगशाला": "lab", "कमरा": "room", "रूम": "room",
+    "कक्षा": "class", "क्लास": "class", "हॉल": "hall", "स्टाफ": "staff", "टीचर्स": "teachers",
+    # Washrooms
+    "वॉशरूम": "washroom", "वाशरूम": "washroom", "टॉयलेट": "toilet", "शौचालय": "toilet",
+    "बाथरूम": "bathroom", "लड़कों": "boys", "बॉयज": "boys", "लड़कियों": "girls",
+    "गर्ल्स": "girls", "महिला": "girls", "लेडीज": "girls",
+    # Honors / Titles
+    "सर": "sir", "मैम": "maam", "मैडम": "maam", "डॉ": "dr", "डॉक्टर": "dr", "प्रोफेसर": "prof",
+}
+
+def transliterate_hindi_keywords(text: str) -> str:
+    """Map Devanagari Hindi keywords to Latin phonetic roots for zero-loss matching."""
+    t = text
+    for hk, en in HINDI_KEYWORD_MAP.items():
+        t = t.replace(hk, en)
+    return t
 
 
 def _normalize_for_fuzzy(text: str) -> str:
@@ -335,28 +370,38 @@ async def _call_gemini(api_key: str, user_query: str) -> Optional[dict]:
     return None
 
 
+def _is_valid_api_key(k: Optional[str]) -> bool:
+    if not k:
+        return False
+    k = k.strip()
+    if len(k) < 15 or "your_" in k.lower() or "placeholder" in k.lower() or "api_key" in k.lower():
+        return False
+    return True
+
+
 async def resolve_with_llm(user_query: str) -> Optional[Dict[str, Any]]:
     """
     Query cloud LLM (Groq / OpenAI / Gemini) for zero-failure intent & entity resolution.
-    Falls back gracefully to local phonetic/fuzzy matcher if API key is absent or on network error.
+    Ignores placeholder API keys and falls back gracefully to local phonetic/fuzzy matcher.
     """
     groq_key = os.getenv("GROQ_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
     gemini_key = os.getenv("GEMINI_API_KEY")
 
-    if not (groq_key or openai_key or gemini_key):
-        return None
-
     result = None
-    try:
-        if groq_key:
-            result = await _call_groq(groq_key, user_query)
-        elif openai_key:
-            result = await _call_openai(openai_key, user_query)
-        elif gemini_key:
-            result = await _call_gemini(gemini_key, user_query)
-    except Exception as e:
-        print(f"[LLM Resolver Error] {e}")
+    for provider, call_fn, key in [
+        ("groq", _call_groq, groq_key),
+        ("openai", _call_openai, openai_key),
+        ("gemini", _call_gemini, gemini_key)
+    ]:
+        if _is_valid_api_key(key):
+            try:
+                res = await call_fn(key, user_query)
+                if res and isinstance(res, dict) and res.get("matched"):
+                    result = res
+                    break
+            except Exception as e:
+                print(f"[LLM Resolver {provider} Error] {e}")
 
     if result and isinstance(result, dict):
         if result.get("matched") and result.get("entity_id"):
@@ -426,38 +471,48 @@ def local_fallback_resolve(query: str) -> Optional[Dict[str, Any]]:
                     res["target_branch"] = mapping["target_branch"]
                 return res
 
-    q = _norm(query)
-    best_score, best = 0, None
+    def _match_string(q_str: str):
+        best_score, best = 0, None
+        for entry in _INDEX:
+            for alias in entry["aliases_norm"]:
+                if q_str == alias:
+                    score = 1000 + len(alias) * 3
+                elif alias in q_str:
+                    score = 500 + len(alias) * 3
+                elif q_str in alias:
+                    score = len(q_str) * 2 - (len(alias) - len(q_str))
+                else:
+                    score = 0
 
-    # Pass 1: Exact / substring / containment match
-    for entry in _INDEX:
-        for alias in entry["aliases_norm"]:
-            if q == alias:
-                score = 1000 + len(alias) * 3
-            elif alias in q:
-                score = 500 + len(alias) * 3
-            elif q in alias:
-                score = len(q) * 2 - (len(alias) - len(q))
+                if score > best_score:
+                    best_score, best = score, entry
+
+            if q_str == entry["name_norm"]:
+                score = 1000 + len(entry["name_norm"]) * 2
+            elif entry["name_norm"] in q_str:
+                score = 500 + len(entry["name_norm"]) * 2
+            elif q_str in entry["name_norm"]:
+                score = len(q_str) * 2 - (len(entry["name_norm"]) - len(q_str))
             else:
                 score = 0
 
             if score > best_score:
                 best_score, best = score, entry
 
-        if q == entry["name_norm"]:
-            score = 1000 + len(entry["name_norm"]) * 2
-        elif entry["name_norm"] in q:
-            score = 500 + len(entry["name_norm"]) * 2
-        elif q in entry["name_norm"]:
-            score = len(q) * 2 - (len(entry["name_norm"]) - len(q))
-        else:
-            score = 0
+        return best["item"] if best else None
 
-        if score > best_score:
-            best_score, best = score, entry
+    # Pass 1: Direct match on normalized original query
+    q_norm = _norm(query)
+    direct_match = _match_string(q_norm)
+    if direct_match:
+        return direct_match
 
-    if best:
-        return best["item"]
+    # Pass 1b: Match on Hindi keyword transliterated query (e.g. 'ललित सर का कैबिन' -> 'lalit sir ka cabin')
+    q_mapped = _norm(transliterate_hindi_keywords(query))
+    if q_mapped != q_norm:
+        mapped_match = _match_string(q_mapped)
+        if mapped_match:
+            return mapped_match
 
     # Pass 2: Fuzzy phonetic token matching (handles ASR mistranscriptions)
     # e.g. "bosh lab" → "bosch lab", "mitsubisi" → "mitsubishi"
