@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from core.config import BASE_DIR, STATIC_DIR, HOST, PORT, START_NODE
 from core.graph import NODES, SCENE_CALIBRATION, build_route
-from core.resolver import resolve
+from core.resolver import resolve, resolve_async
 from core.tts import synthesize, generate_tour_segments
 
 app = FastAPI(title="Sakhi EEE Kiosk", version="2.0.0")
@@ -289,7 +289,7 @@ async def broadcast_kiosk_command(data: dict):
 async def execute_voice_query_and_broadcast(query: str, start: Optional[str] = START_NODE) -> dict:
     """Core pipeline: resolve -> route -> synthesize -> broadcast to frontend kiosk."""
     start_node = start if start in NODES else START_NODE
-    entity = resolve(query)
+    entity = await resolve_async(query)
 
     # 1. Unresolved query: Do NOT silently route to entrance foyer. Return helpful clarification prompt.
     if not entity:
@@ -384,7 +384,7 @@ class QueryBody(BaseModel):
 @app.post("/api/query")
 async def query_handler(body: QueryBody):
     start = body.start if body.start in NODES else START_NODE
-    entity = resolve(body.query)
+    entity = await resolve_async(body.query)
 
     # 1. Unresolved query
     if not entity:

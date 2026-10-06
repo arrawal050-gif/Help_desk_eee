@@ -133,7 +133,8 @@ function _buildWakeRecognition() {
             _showHUD("Sakhi sun rahi hai...");
             setTimeout(() => {
               _showHUD("");
-              if (_onResult) _onResult(queryPart);
+              // Send verbatim transcript directly to backend to allow LLM full natural sentence context
+              if (_onResult) _onResult(text.trim());
             }, 400);
             return;
           } else if (!_awaitingQuery) {

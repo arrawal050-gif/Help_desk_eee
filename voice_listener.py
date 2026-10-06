@@ -242,7 +242,8 @@ def listen_with_speech_recognition():
 
                     if query_part and len(query_part) > 2:
                         # User asked the question in one breath: "Sakhi, Bosch Lab kahan hai?"
-                        dispatch_query_to_kiosk(query_part)
+                        # Send the verbatim transcript directly to allow the LLM to process full natural context
+                        dispatch_query_to_kiosk(transcript)
                     else:
                         # User only said "Sakhi" - chime and wait for destination prompt
                         state_awaiting_query = True
