@@ -477,11 +477,11 @@ export function loadPano(url, yaw = null, pitch = null) {
         const t0 = performance.now();
         (function tick() {
           if (myFadeToken !== currentFadeToken) { resolve(); return; }
-          const p = Math.min((performance.now() - t0) / 400, 1);
-          const ease = p * p * (3 - 2 * p);
+          const prog = Math.min((performance.now() - t0) / 400, 1);
+          const ease = prog * prog * (3 - 2 * prog);
           next.opacity = ease;
           live.opacity = 1 - ease;
-          if (p < 1) { requestAnimationFrame(tick); return; }
+          if (prog < 1) { requestAnimationFrame(tick); return; }
           activeIdx = 1 - activeIdx;
           live.opacity = 0;
           next.opacity = 1;

@@ -70,11 +70,11 @@ async def synthesize(
 
 async def synthesize_speech_base64(
     text: str,
-    voice: str = "hi-IN-SwaraNeural",
-    pitch: str = "+15Hz",
-    rate: str = "-5%",
+    voice: str = TTS_VOICE,
+    pitch: str = TTS_PITCH,
+    rate: str = TTS_RATE,
 ) -> str:
-    """Synthesize speech using calm, unhurried, accessible prosody."""
+    """Synthesize speech using configured prosody (hi-IN-SwaraNeural by default)."""
     return await synthesize(text, voice=voice, pitch=pitch, rate=rate)
 
 
@@ -290,8 +290,8 @@ async def generate_tour_segments(entity: dict, route_nodes: list) -> list:
         "node_sequence": [dest_pano],
     })
 
-    # Synthesize audio in parallel for all segments via edge-tts (hi-IN-SwaraNeural, slow & calm)
-    tasks = [synthesize_speech_base64(seg["text"], rate="-5%", pitch="+15Hz") for seg in segments]
+    # Synthesize audio in parallel for all segments via edge-tts (hi-IN-SwaraNeural)
+    tasks = [synthesize_speech_base64(seg["text"]) for seg in segments]
     audios = await asyncio.gather(*tasks)
     for seg, aud in zip(segments, audios):
         seg["audio_base64"] = aud

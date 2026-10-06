@@ -77,11 +77,12 @@ function synthesizeWebAudioDing() {
 }
 
 // ── Subtle On-Screen Voice HUD Indicator ──────────────────────────────────────
-const $voiceHud = document.getElementById("voice-status-hud");
-const $voiceText = document.getElementById("voice-status-text");
+// NOTE: DOM refs are resolved lazily inside functions (module runs before DOMContentLoaded)
 let _hudFadeTimer = null;
 
 export function showVoiceStatus(status, text) {
+  const $voiceHud  = document.getElementById("voice-status-hud");
+  const $voiceText = document.getElementById("voice-status-text");
   if (!$voiceHud) return;
 
   clearTimeout(_hudFadeTimer);

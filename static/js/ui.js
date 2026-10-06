@@ -19,7 +19,7 @@ import {
   getStaircaseBranchYaw,
   viewerInstance
 } from "./viewer.js?v=5.0";
-import { initSpeech, toggleMic, playAudio } from "./speech.js";
+import { initSpeech, toggleMic, playAudio } from "./speech.js?v=2.0";
 
 const START_NODE = "16_Entrance_from_out_side";
 const getStartCalib = () => getCalibratedHeading(START_NODE);

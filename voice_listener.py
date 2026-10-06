@@ -165,10 +165,10 @@ def listen_with_speech_recognition():
     import speech_recognition as sr
 
     recognizer = sr.Recognizer()
-    recognizer.energy_threshold = 300  # Adjust for background noise
+    recognizer.energy_threshold = 250     # Lower = picks up softer speech
     recognizer.dynamic_energy_threshold = True
-    recognizer.pause_threshold = 0.8
-    recognizer.non_speaking_duration = 0.5
+    recognizer.pause_threshold = 0.6      # 0.6s silence = end of phrase (was 0.8)
+    recognizer.non_speaking_duration = 0.4  # Faster response at end of speech
 
     # Look for USB microphone or default microphone
     device_index = None
@@ -205,15 +205,26 @@ def listen_with_speech_recognition():
 
             with mic as source:
                 # Short phrase limit keeps response fast and responsive
-                listen_limit = 6 if state_awaiting_query else 5
+                listen_limit = 6 if state_awaiting_query else 4
                 broadcast_status("listening" if state_awaiting_query else "idle", 
                                  "Sakhi sun rahi hai..." if state_awaiting_query else "")
                 
                 audio = recognizer.listen(source, timeout=3.0, phrase_time_limit=listen_limit)
 
             try:
-                # Transcribe using Google Speech API with Hindi/Hinglish recognition
-                transcript = recognizer.recognize_google(audio, language="hi-IN")
+                # Transcribe using Google Speech API with Hindi/Hinglish + English recognition
+                # Try Hindi first (covers most campus queries), then English as fallback
+                transcript = None
+                for lang in ["hi-IN", "en-IN"]:
+                    try:
+                        transcript = recognizer.recognize_google(audio, language=lang)
+                        break
+                    except sr.UnknownValueError:
+                        continue
+                    except sr.RequestError:
+                        raise
+                if not transcript:
+                    raise sr.UnknownValueError()
                 print(f"[VoiceListener Heard] '{transcript}'")
 
                 if state_awaiting_query:

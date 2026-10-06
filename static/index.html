@@ -95,8 +95,25 @@
   <!-- ── Boot (all local, no CDN) ── -->
   <script type="module">
     import { initViewer, loadPano, SCENE_CALIBRATION, getCalibratedHeading } from "/static/js/viewer.js?v=5.0";
-    import "/static/js/ui.js?v=5.0";
-    import "/static/js/app.js?v=5.0";
+    import "/static/js/ui.js?v=5.1";
+    import "/static/js/app.js?v=5.1";
+
+    // Unlock AudioContext on first user interaction (browser autoplay policy)
+    function _unlockAudio() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const buf = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        setTimeout(() => ctx.close(), 200);
+      } catch(_) {}
+      document.removeEventListener('touchstart', _unlockAudio);
+      document.removeEventListener('click', _unlockAudio);
+    }
+    document.addEventListener('touchstart', _unlockAudio, { once: true });
+    document.addEventListener('click', _unlockAudio, { once: true });
 
     try {
       const canvas = document.getElementById("canvas-bg");
