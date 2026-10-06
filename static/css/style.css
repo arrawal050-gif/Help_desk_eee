@@ -39,27 +39,72 @@ html, body {
 #nav-capsule {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 22px;
-  background: var(--glass-bg);
-  border: 1px solid var(--border);
+  padding: 8px 18px;
+  background: linear-gradient(135deg, rgba(10, 16, 30, 0.92) 0%, rgba(15, 23, 42, 0.88) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: 9999px;
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(56, 189, 248, 0.1);
   z-index: 100;
   white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
   transition: var(--trans);
 }
-#nav-capsule .brand {
-  font-size: 0.9rem; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--text);
+
+.nav-greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
 }
-#nav-capsule .sep { color: var(--muted); font-weight: 300; }
+
+.nav-wave {
+  display: inline-block;
+  font-size: 0.95rem;
+  animation: gentle-wave 2.6s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes gentle-wave {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 60% { transform: rotate(14deg); }
+  40%, 80% { transform: rotate(-8deg); }
+}
+
+.nav-name {
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.nav-tagline {
+  color: #93c5fd;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.nav-sparkle {
+  font-size: 0.82rem;
+  display: inline-block;
+  animation: sparkle-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes sparkle-glow {
+  0%   { transform: scale(0.9); opacity: 0.75; }
+  100% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px #38bdf8); }
+}
+
 #nav-capsule .status-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 8px #34d399;
+  box-shadow: 0 0 10px #34d399;
   animation: pulse-dot 2.4s ease-in-out infinite;
+  flex-shrink: 0;
 }
+
 @keyframes pulse-dot {
   0%,100% { opacity: 1; transform: scale(1); }
   50%     { opacity: 0.5; transform: scale(0.7); }
@@ -486,6 +531,19 @@ html, body {
 }
 
 @media (max-width: 640px) {
+  #nav-capsule {
+    top: 14px;
+    padding: 6px 14px;
+    max-width: calc(100vw - 24px);
+    gap: 7px;
+  }
+  .nav-greeting {
+    font-size: 0.78rem;
+    gap: 5px;
+  }
+  .nav-tagline {
+    font-size: 0.74rem;
+  }
   #credits-badge {
     bottom: 84px;
     right: 12px;
