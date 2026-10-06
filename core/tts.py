@@ -159,6 +159,58 @@ INSTITUTIONAL_DETAILS: dict = {
 }
 
 
+def generate_arrival_speech(entity: dict) -> str:
+    """
+    Context-aware polymorphic arrival dialogue generator.
+    Tailors arrival announcement based on entity category (faculty vs lab vs classroom vs amenity).
+    """
+    category = entity.get("category", "lab").lower()
+    dest_id = entity.get("id", "")
+    inst_info = INSTITUTIONAL_DETAILS.get(dest_id, {})
+
+    name = entity.get("formal_name") or inst_info.get("formal_name") or entity.get("name", "Destination")
+    floor = entity.get("floor", 0)
+
+    floor_str = {
+        0: "Ground Floor",
+        1: "First Floor",
+        2: "Second Floor",
+        3: "Third Floor"
+    }.get(floor, "is floor")
+
+    if category == "faculty":
+        cabin = entity.get("cabin_room", "cabin")
+        aliases_str = " ".join(entity.get("aliases", [])).lower()
+        honorific = "ma'am" if any(w in aliases_str for w in ["maam", "madam", "महिला"]) else "sir"
+        return (
+            f"Hum pahunch gaye hain. Yeh {name} {honorific} ka {cabin} hai, jo ki {floor_str} par sthit hai. "
+            f"Aap unse unke consultation hours ke dauran yahan mil sakte hain."
+        )
+
+    elif category == "lab":
+        description = entity.get(
+            "description",
+            inst_info.get("description", "yahan par advanced practicals aur hands-on project work conduct kiye jaate hain.")
+        )
+        return (
+            f"Hum pahunch gaye hain. Yeh hamara {name} hai, jo ki {floor_str} par sthit hai. "
+            f"{description}"
+        )
+
+    elif category == "classroom":
+        return (
+            f"Hum pahunch gaye hain. Yeh {name} hai, jo ki {floor_str} par sthit hai. "
+            f"Yahan regular departmental lectures aur tutorial sessions conduct hote hain."
+        )
+
+    elif category in ("amenity", "washroom"):
+        name_clean = name[:-9].strip() if name.lower().endswith("facility") else name
+        return f"Hum pahunch gaye hain. Yeh {floor_str} par {name_clean} facility hai."
+
+    # General Fallback
+    return f"Hum pahunch gaye hain. Yeh {name} hai, jo ki {floor_str} par sthit hai."
+
+
 async def generate_tour_segments(entity: dict, route_nodes: list) -> list:
     """
     Generates 4 distinct, synchronized audio segments mapped to physical node transitions.
@@ -171,6 +223,7 @@ async def generate_tour_segments(entity: dict, route_nodes: list) -> list:
       { "id": "arrival", "phase": "showcase", "audio_base64": "...", "text": "...", "nodes": [...], "node_sequence": [...] }
     ]
     """
+    category = entity.get("category", "lab").lower()
     target_floor = entity.get("floor", 0)
     floor_hindi = {0: "Ground Floor", 1: "First Floor", 2: "Second Floor"}.get(target_floor, f"{target_floor}th Floor")
     
@@ -240,12 +293,17 @@ async def generate_tour_segments(entity: dict, route_nodes: list) -> list:
                 approach_text = f"{floor_hindi} landing par aane ke baad, seedhe haath par {room_short} ka darwaza hai."
             elif "washroom" in dest_id.lower():
                 approach_text = f"{floor_hindi} landing par aane ke baad, samne washroom ka rasta hai."
+            elif category == "faculty":
+                approach_text = f"{floor_hindi} landing par aane ke baad, samne {room_short} ke cabin ki taraf chalte hain."
             else:
                 approach_text = f"{floor_hindi} landing par aane ke baad, samne {room_short} ka pravesh dwar hai."
         elif corridor_nodes:
             # Destination along the corridor (Robotics Lab, Lab 10, Mitsubishi, etc.)
             approach_nodes = corridor_nodes
-            approach_text = f"{floor_hindi} landing par aane ke baad, corridor mein aage badhte hue {room_short} ki taraf chalte hain."
+            if category == "faculty":
+                approach_text = f"{floor_hindi} landing par aane ke baad, corridor mein aage badhte hue {room_short} ke cabin ki taraf chalte hain."
+            else:
+                approach_text = f"{floor_hindi} landing par aane ke baad, corridor mein aage badhte hue {room_short} ki taraf chalte hain."
         else:
             approach_nodes = [dest_pano]
             approach_text = f"{floor_hindi} par pahunchne ke baad, seedhe samne {room_short} ka pravesh dwar hai."
@@ -273,14 +331,7 @@ async def generate_tour_segments(entity: dict, route_nodes: list) -> list:
     })
 
     # ── Phase 4: Showcase (Destination Arrival) ─────────────────────────────────
-    clean_desc = desc.strip()
-    if clean_desc and clean_desc[0].islower():
-        clean_desc = clean_desc[0].upper() + clean_desc[1:]
-
-    arrival_text = (
-        f"Hum pahunch gaye hain! Yeh hai hamara {full_name}, jo ki {floor_hindi} par sthit hai. "
-        f"{clean_desc}"
-    )
+    arrival_text = generate_arrival_speech(entity)
 
     segments.append({
         "id": "arrival",
